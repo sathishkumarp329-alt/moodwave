@@ -1,0 +1,7 @@
+flask
+flask-cors
+mysql-connector-python
+rpy2
+pandas
+numpy
+python-dotenv
