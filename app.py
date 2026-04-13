@@ -34,10 +34,11 @@ def allowed_video(fn): return "." in fn and fn.rsplit(".",1)[1].lower() in ALLOW
 
 def get_db():
     return mysql.connector.connect(
-        host     = "localhost",
-        user     = "root",
-        password = os.getenv("DB_PASSWORD", "root123"),
-        database = "music_mood_db"
+        host     = os.getenv("MYSQLHOST",     "localhost"),
+        port     = int(os.getenv("MYSQLPORT", "3306")),
+        user     = os.getenv("MYSQLUSER",     "root"),
+        password = os.getenv("MYSQLPASSWORD", "root123"),
+        database = os.getenv("MYSQLDATABASE", "music_mood_db"),
     )
 
 def analyze_mood(song, history):
