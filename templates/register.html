@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MoodWave — Create Account</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;min-height:100vh;background:#070714;overflow-x:hidden;}
+.blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:0.38;pointer-events:none;z-index:0;animation:bd ease-in-out infinite alternate;}
+.b1{width:500px;height:500px;background:rgba(255,60,120,0.4);top:-150px;left:-120px;animation-duration:9s;}
+.b2{width:450px;height:450px;background:rgba(60,120,255,0.35);top:10%;right:-120px;animation-duration:12s;animation-delay:-3s;}
+.b3{width:400px;height:400px;background:rgba(140,60,255,0.3);bottom:5%;left:15%;animation-duration:10s;animation-delay:-5s;}
+.b4{width:320px;height:320px;background:rgba(20,200,150,0.22);bottom:-60px;right:5%;animation-duration:8s;animation-delay:-2s;}
+@keyframes bd{from{transform:translate(0,0) scale(1);}to{transform:translate(35px,25px) scale(1.1);}}
+.note{position:fixed;color:rgba(255,255,255,0.09);pointer-events:none;z-index:1;animation:fn linear infinite;}
+@keyframes fn{0%{transform:translateY(105vh) rotate(0deg);opacity:0;}8%{opacity:0.11;}92%{opacity:0.07;}100%{transform:translateY(-60px) rotate(400deg);opacity:0;}}
+.card{background:rgba(255,255,255,0.06);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,0.13);border-radius:24px;padding:40px 36px;width:100%;max-width:460px;position:relative;z-index:10;}
+.gt{background:linear-gradient(135deg,#ff6eb4,#a78bfa,#60d9ff,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.inp-wrap{position:relative;margin-bottom:14px;}
+.inp-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;opacity:0.4;}
+.inp{width:100%;padding:13px 14px 13px 42px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);border-radius:12px;color:#fff;font-family:'Poppins',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s,background 0.2s;}
+.inp::placeholder{color:rgba(255,255,255,0.3);}
+.inp:focus{border-color:rgba(168,85,247,0.75);background:rgba(255,255,255,0.10);}
+.inp.valid{border-color:rgba(52,211,153,0.6);}
+.inp.invalid{border-color:rgba(239,68,68,0.6);}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:16px;padding:4px;}
+.str-row{display:flex;gap:4px;margin-top:5px;}
+.str-seg{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.1);transition:background 0.3s;}
+.rbtn{width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#ff4d8d,#a855f7,#3b82f6,#10b981);background-size:250% 250%;animation:gs 3s ease infinite;color:#fff;font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;margin-top:4px;}
+.rbtn:hover{transform:scale(1.02);box-shadow:0 0 26px rgba(168,85,247,0.45);}
+.rbtn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+@keyframes gs{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1);}
+.divider span{color:rgba(255,255,255,0.3);font-size:12px;}
+.sbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.82);font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.sbtn:hover{background:rgba(255,255,255,0.11);border-color:rgba(255,255,255,0.22);}
+.chk-wrap{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;}
+.chk{width:16px;height:16px;min-width:16px;accent-color:#a855f7;margin-top:2px;cursor:pointer;}
+.lnk{color:#a78bfa;cursor:pointer;text-decoration:none;}
+.lnk:hover{text-decoration:underline;}
+.msg{font-size:13px;padding:12px 16px;border-radius:12px;margin-top:14px;display:none;line-height:1.5;}
+.msg.err{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;}
+.msg.ok{background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:#6ee7b7;}
+.wave{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:28px;margin-top:22px;}
+.wbar{width:4px;border-radius:2px;background:linear-gradient(to top,#a855f7,#60d9ff);animation:wb 0.8s ease-in-out infinite alternate;}
+@keyframes wb{from{height:4px}to{height:24px}}
+.steps{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:28px;}
+.step{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;border:2px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.3);}
+.step.active{background:linear-gradient(135deg,#a855f7,#3b82f6);border-color:transparent;color:#fff;}
+.step.done{background:rgba(52,211,153,0.2);border-color:rgba(52,211,153,0.5);color:#34d399;}
+.step-line{flex:1;height:1px;background:rgba(255,255,255,0.1);max-width:50px;}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="blob b3"></div><div class="blob b4"></div>
+<div id="nc" style="position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;"></div>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:5;">
+  <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:40px;margin-bottom:6px;">🎵</div>
+      <h1 style="font-size:30px;font-weight:800;" class="gt">MoodWave</h1>
+      <p style="color:rgba(255,255,255,0.35);font-size:13px;margin-top:3px;">Create your free account</p>
+      <a href="/home" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;color:rgba(168,85,247,0.75);font-size:12px;text-decoration:none;">← Back to home</a>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="steps" style="width:100%;max-width:460px;">
+      <div class="step active" id="step1">1</div>
+      <div class="step-line"></div>
+      <div class="step" id="step2">2</div>
+      <div class="step-line"></div>
+      <div class="step" id="step3">✓</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;width:100%;max-width:360px;margin-bottom:20px;">
+      <span style="font-size:11px;color:rgba(255,255,255,0.4);">Your info</span>
+      <span style="font-size:11px;color:rgba(255,255,255,0.4);">Password</span>
+      <span style="font-size:11px;color:rgba(255,255,255,0.4);">Done</span>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:6px;color:#fff;">Create your account</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,0.38);margin-bottom:24px;">Fill in your details to get started</p>
+
+      <!-- Name row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0;">
+        <div class="inp-wrap">
+          <span class="inp-icon">👤</span>
+          <input class="inp" id="r-fname" type="text" placeholder="First name" autocomplete="given-name" oninput="validateField(this,'name')"/>
+        </div>
+        <div class="inp-wrap">
+          <span class="inp-icon" style="left:10px;">👤</span>
+          <input class="inp" id="r-lname" type="text" placeholder="Last name" autocomplete="family-name" oninput="validateField(this,'name')"/>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="inp-wrap">
+        <span class="inp-icon">✉</span>
+        <input class="inp" id="r-email" type="email" placeholder="Email address" autocomplete="email" oninput="validateField(this,'email')"/>
+      </div>
+
+      <!-- Password -->
+      <div class="inp-wrap">
+        <span class="inp-icon">🔒</span>
+        <input class="inp" id="r-pass" type="password" placeholder="Create password (min 6 chars)" autocomplete="new-password" oninput="checkStrength(this.value)"/>
+        <button class="eye-btn" type="button" onclick="toggleEye('r-pass',this)">👁</button>
+      </div>
+      <div class="str-row">
+        <div class="str-seg" id="s1"></div><div class="str-seg" id="s2"></div>
+        <div class="str-seg" id="s3"></div><div class="str-seg" id="s4"></div>
+      </div>
+      <p id="str-label" style="font-size:11px;color:rgba(255,255,255,0.3);margin:4px 0 12px;height:14px;"></p>
+
+      <!-- Confirm password -->
+      <div class="inp-wrap">
+        <span class="inp-icon">🔒</span>
+        <input class="inp" id="r-pass2" type="password" placeholder="Confirm password" autocomplete="new-password" oninput="checkMatch()"/>
+        <button class="eye-btn" type="button" onclick="toggleEye('r-pass2',this)">👁</button>
+      </div>
+      <p id="match-label" style="font-size:11px;margin:-8px 0 12px;height:14px;"></p>
+
+      <!-- Terms -->
+      <div class="chk-wrap">
+        <input class="chk" type="checkbox" id="r-terms"/>
+        <label for="r-terms" style="color:rgba(255,255,255,0.45);font-size:12px;line-height:1.5;cursor:pointer;">
+          I agree to the <span class="lnk">Terms of Service</span> and <span class="lnk">Privacy Policy</span>
+        </label>
+      </div>
+
+      <button class="rbtn" id="reg-btn" onclick="doRegister()">Create account →</button>
+      <div id="reg-msg" class="msg"></div>
+
+      <div class="divider"><span>or sign up with</span></div>
+      <button class="sbtn" onclick="location.href='/auth/google'">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+
+      <p style="text-align:center;color:rgba(255,255,255,0.32);font-size:13px;margin-top:20px;">
+        Already have an account?
+        <a href="/login" class="lnk" style="font-weight:600;">Sign in →</a>
+      </p>
+    </div>
+
+    <div class="wave" id="wave-footer"></div>
+  </div>
+</div>
+
+<script>
+const syms=['♩','♪','♫','♬','𝄞'];
+function spawnNote(){
+  const nc=document.getElementById('nc'),n=document.createElement('div');
+  n.className='note';n.textContent=syms[Math.floor(Math.random()*syms.length)];
+  n.style.left=Math.random()*100+'%';const d=9+Math.random()*10;
+  n.style.animationDuration=d+'s';n.style.animationDelay=(Math.random()*-d)+'s';
+  n.style.fontSize=(12+Math.random()*13)+'px';
+  nc.appendChild(n);setTimeout(()=>n.remove(),(d+1)*1000);
+}
+setInterval(spawnNote,700);for(let i=0;i<10;i++)spawnNote();
+const wf=document.getElementById('wave-footer');
+for(let i=0;i<16;i++){const b=document.createElement('div');b.className='wbar';b.style.animationDelay=(i*0.07)+'s';wf.appendChild(b);}
+
+// If already logged in redirect
+async function checkSession(){
+  try{const r=await fetch('/api/me');const d=await r.json();if(d.logged_in)window.location.href='/dashboard';}catch(e){}
+}
+checkSession();
+
+function toggleEye(id,btn){
+  const inp=document.getElementById(id);
+  inp.type=inp.type==='password'?'text':'password';
+  btn.textContent=inp.type==='text'?'🙈':'👁';
+}
+
+function validateField(inp,type){
+  if(type==='email'){
+    const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inp.value);
+    inp.className='inp '+(inp.value.length>0?(ok?'valid':'invalid'):'');
+  } else {
+    inp.className='inp '+(inp.value.trim().length>0?'valid':'');
+  }
+}
+
+const SC=['#ef4444','#f97316','#eab308','#22c55e'];
+const SL=['Weak','Fair','Good','Strong'];
+function checkStrength(v){
+  let s=0;
+  if(v.length>=6)s++;
+  if(/[A-Z]/.test(v)&&/[a-z]/.test(v))s++;
+  if(/\d/.test(v))s++;
+  if(/[^A-Za-z0-9]/.test(v))s++;
+  for(let i=1;i<=4;i++) document.getElementById('s'+i).style.background=i<=s?SC[s-1]:'rgba(255,255,255,0.1)';
+  const lbl=document.getElementById('str-label');
+  lbl.textContent=v.length>0?(SL[s-1]||''):'';
+  lbl.style.color=v.length>0?(SC[s-1]||'transparent'):'transparent';
+  checkMatch();
+}
+
+function checkMatch(){
+  const p1=document.getElementById('r-pass').value;
+  const p2=document.getElementById('r-pass2').value;
+  const lbl=document.getElementById('match-label');
+  if(p2.length===0){lbl.textContent='';return;}
+  if(p1===p2){lbl.textContent='✓ Passwords match';lbl.style.color='#34d399';}
+  else{lbl.textContent='✗ Passwords do not match';lbl.style.color='#f87171';}
+}
+
+// Update step indicator
+function setStep(n){
+  for(let i=1;i<=3;i++){
+    const el=document.getElementById('step'+i);
+    if(!el)return;
+    if(i<n) el.className='step done';
+    else if(i===n) el.className='step active';
+    else el.className='step';
+  }
+}
+
+function showMsg(text,type){
+  const el=document.getElementById('reg-msg');
+  el.textContent=text;el.className='msg '+type;el.style.display='block';
+}
+
+async function doRegister(){
+  const fname=document.getElementById('r-fname').value.trim();
+  const lname=document.getElementById('r-lname').value.trim();
+  const email=document.getElementById('r-email').value.trim().toLowerCase();
+  const pass =document.getElementById('r-pass').value;
+  const pass2=document.getElementById('r-pass2').value;
+  const terms=document.getElementById('r-terms').checked;
+
+  // Client-side validation
+  if(!fname||!lname){showMsg('Please enter your first and last name.','err');return;}
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('Please enter a valid email address.','err');return;}
+  if(pass.length<6){showMsg('Password must be at least 6 characters.','err');return;}
+  if(pass!==pass2){showMsg('Passwords do not match. Please check and try again.','err');return;}
+  if(!terms){showMsg('Please accept the Terms of Service to continue.','err');return;}
+
+  const btn=document.getElementById('reg-btn');
+  btn.textContent='Creating account…';btn.disabled=true;
+  setStep(2);
+
+  try{
+    const res=await fetch('/api/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fname,lname,email,password:pass})
+    });
+    const data=await res.json();
+
+    if(data.ok){
+      setStep(3);
+      showMsg('✓ Account created! Welcome '+data.name+'! Redirecting to dashboard…','ok');
+      setTimeout(()=>{window.location.href='/dashboard';},1200);
+    } else {
+      setStep(1);
+      // Email already exists — redirect to login with prefilled email
+      if(res.status===409){
+        showMsg('','err');
+        document.getElementById('reg-msg').innerHTML=
+          'This email is already registered. <a href="/login?email='+encodeURIComponent(email)+'" style="color:#a78bfa;font-weight:600;">Sign in instead →</a>';
+        document.getElementById('reg-msg').className='msg err';
+        document.getElementById('reg-msg').style.display='block';
+      } else {
+        showMsg(data.error||'Registration failed. Please try again.','err');
+      }
+      btn.textContent='Create account →';btn.disabled=false;
+    }
+  }catch(e){
+    setStep(1);
+    showMsg('Cannot connect to server. Please try again.','err');
+    btn.textContent='Create account →';btn.disabled=false;
+  }
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
+</script>
+</body>
+</html>

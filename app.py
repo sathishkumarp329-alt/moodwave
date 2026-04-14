@@ -105,28 +105,46 @@ def root():
     # Always show home page first — do NOT auto redirect to dashboard
     return render_template("home.html")
 
+# ── ADD THESE NEW ROUTES TO YOUR app.py ───────────────────────────────────────
+# Replace the existing @app.route("/auth") section with all of these:
+
+@app.route("/auth")
+def auth():
+    # Keep old /auth route — redirect to /login
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login_page"))
+
+@app.route("/login")
+def login_page():
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
+    return render_template("login.html")
+
+@app.route("/register")
+def register_page():
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
+    return render_template("register.html")
+
+@app.route("/")
+def root():
+    return render_template("home.html")
+
 @app.route("/home")
 def home():
     return render_template("home.html")
 
-@app.route("/auth")
-def auth():
-    # If already logged in go straight to dashboard
-    if "user_id" in session:
-        return redirect(url_for("dashboard"))
-    return render_template("auth.html")
-
 @app.route("/dashboard")
 def dashboard():
-    # Protected — must be logged in
     if "user_id" not in session:
-        return redirect(url_for("auth"))
+        return redirect(url_for("login_page"))
     return render_template("index.html")
 
 @app.route("/stats")
 def stats():
     if "user_id" not in session:
-        return redirect(url_for("auth"))
+        return redirect(url_for("login_page"))
     return render_template("stats.html")
 
 # ══════════════════════════════════════════════════════════════════════════════
