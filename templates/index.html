@@ -149,7 +149,7 @@ body{font-family:'Poppins',sans-serif;background:#060612;color:#fff;min-height:1
 
 <!-- ══ SIDEBAR ══════════════════════════════════════════════════════════════ -->
 <aside class="sidebar">
-  <div class="logo" onclick="showSection('discover')">🎵 Kalmly 😄</div>
+  <div class="logo" onclick="showSection('discover')">🎵 MoodWave 😄</div>
   <span class="nav-label">Menu</span>
   <button class="nav-item active" id="nav-discover" onclick="showSection('discover')"><span class="nav-icon">🎧</span>Discover</button>
   <button class="nav-item" id="nav-mood" onclick="showSection('mood')"><span class="nav-icon">🎭</span>By Mood</button>
@@ -174,108 +174,471 @@ body{font-family:'Poppins',sans-serif;background:#060612;color:#fff;min-height:1
   <button class="nav-item" onclick="doLogout()"><span class="nav-icon">🚪</span>Logout</button>
 </aside>
 
-<!-- ══ MAIN ══════════════════════════════════════════════════════════════════ -->
-<main class="main" style="padding-bottom:90px;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>MoodWave</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{font-family:'Poppins',sans-serif;background:#0a0a0f;color:#fff;height:100%;overflow:hidden;}
 
-  <!-- ── DISCOVER ── -->
-  <div class="page-section active" id="sec-discover">
-    <p class="sec-title">What's your vibe? <span class="gt">🎶</span></p>
-    <p class="sec-sub">Click any song — AI reads your mood and recommends more</p>
-    <div class="filter-row">
-      <button class="fpill on" onclick="filterDiscover('all',this)">All</button>
-      <button class="fpill" onclick="filterDiscover('happy',this)">😄 Happy</button>
-      <button class="fpill" onclick="filterDiscover('sad',this)">😢 Sad</button>
-      <button class="fpill" onclick="filterDiscover('energetic',this)">⚡ Energetic</button>
-      <button class="fpill" onclick="filterDiscover('calm',this)">🌊 Calm</button>
-      <button class="fpill" onclick="filterDiscover('romantic',this)">💕 Romantic</button>
+/* ── Variables ── */
+:root{
+  --pink:#ff4d8d;--purple:#a855f7;--blue:#3b82f6;--green:#10b981;
+  --teal:#60d9ff;--amber:#fbbf24;--red:#f87171;
+  --glass:rgba(255,255,255,0.06);
+  --glass-border:rgba(255,255,255,0.10);
+  --nav-h:64px;--player-h:72px;
+}
+
+/* ── App shell ── */
+.app{display:flex;flex-direction:column;height:100vh;max-width:430px;margin:0 auto;position:relative;background:#0a0a0f;}
+
+/* ── Blobs ── */
+.blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:0.18;pointer-events:none;z-index:0;}
+.b1{width:400px;height:400px;background:#ff3c78;top:-100px;left:-100px;animation:bd 11s ease-in-out infinite alternate;}
+.b2{width:350px;height:350px;background:#3b4bff;top:20%;right:-100px;animation:bd 14s ease-in-out infinite alternate-reverse;}
+.b3{width:300px;height:300px;background:#9c1fff;bottom:10%;left:10%;animation:bd 10s ease-in-out infinite alternate;}
+@keyframes bd{from{transform:translate(0,0);}to{transform:translate(30px,20px);}}
+
+/* ── Pages ── */
+.page{display:none;flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:2;padding-bottom:calc(var(--player-h) + var(--nav-h) + 8px);}
+.page.active{display:block;}
+
+/* ── Top search bar ── */
+.top-bar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,10,15,0.92);backdrop-filter:blur(16px);
+  padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.search-pill{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.12);
+  border-radius:24px;padding:10px 16px;cursor:pointer;
+  transition:all 0.2s;
+}
+.search-pill:hover{background:rgba(255,255,255,0.13);border-color:rgba(168,85,247,0.5);}
+.search-pill span{color:rgba(255,255,255,0.45);font-size:13px;}
+
+/* ── Section headers ── */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;}
+.sec-hd h3{font-size:16px;font-weight:700;}
+.sec-hd a{font-size:12px;color:rgba(168,85,247,0.85);cursor:pointer;}
+
+/* ── Horizontal scroll row ── */
+.h-scroll{display:flex;gap:12px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none;}
+.h-scroll::-webkit-scrollbar{display:none;}
+
+/* ── Category chips ── */
+.cat-chips{display:flex;gap:8px;overflow-x:auto;padding:10px 16px;scrollbar-width:none;}
+.cat-chips::-webkit-scrollbar{display:none;}
+.chip{padding:7px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.65);font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;transition:all 0.2s;flex-shrink:0;}
+.chip.on,.chip:hover{background:rgba(168,85,247,0.25);border-color:rgba(168,85,247,0.55);color:#fff;}
+
+/* ── Song card (vertical) ── */
+.song-card-v{
+  flex-shrink:0;width:150px;cursor:pointer;
+  transition:transform 0.2s;
+}
+.song-card-v:hover{transform:scale(1.04);}
+.song-card-v .thumb{
+  width:150px;height:150px;border-radius:14px;
+  object-fit:cover;background:var(--glass);
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;margin-bottom:8px;overflow:hidden;
+  position:relative;
+}
+.song-card-v .thumb img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.song-card-v .thumb .play-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,0.35);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:14px;opacity:0;transition:opacity 0.2s;
+}
+.song-card-v:hover .play-overlay{opacity:1;}
+.song-card-v .stitle{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.song-card-v .sartist{font-size:11px;color:rgba(255,255,255,0.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── Song row (horizontal list) ── */
+.song-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 16px;cursor:pointer;transition:background 0.2s;
+  border-radius:12px;margin:0 8px;
+}
+.song-row:hover,.song-row.playing{background:rgba(168,85,247,0.12);}
+.song-row .snum{width:20px;text-align:center;font-size:12px;color:rgba(255,255,255,0.3);flex-shrink:0;}
+.song-row .sart{
+  width:48px;height:48px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  overflow:hidden;background:rgba(255,255,255,0.08);
+}
+.song-row .sart img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
+.song-row .sinfo{flex:1;min-width:0;}
+.song-row .sinfo p{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.song-row .sinfo span{font-size:11px;color:rgba(255,255,255,0.4);}
+.song-row .sbadge{display:flex;gap:4px;flex-shrink:0;}
+.mbadge{font-size:9px;padding:2px 6px;border-radius:10px;font-weight:600;}
+.ba{background:rgba(52,211,153,0.15);color:#34d399;}
+.bv{background:rgba(96,165,250,0.15);color:#60a5fa;}
+.bna{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.3);}
+
+/* ── Reels section ── */
+.reel-row{display:flex;gap:10px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none;}
+.reel-row::-webkit-scrollbar{display:none;}
+.reel-card{
+  flex-shrink:0;width:110px;height:180px;border-radius:14px;
+  overflow:hidden;position:relative;cursor:pointer;
+  background:rgba(255,255,255,0.08);
+  transition:transform 0.2s;
+}
+.reel-card:hover{transform:scale(1.05);}
+.reel-card .rthumb{width:100%;height:100%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:36px;}
+.reel-card .rthumb img{width:100%;height:100%;object-fit:cover;}
+.reel-card .roverlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,0.8) 40%, transparent 100%);
+  padding:10px 8px;display:flex;flex-direction:column;justify-content:flex-end;
+}
+.reel-card .rtitle{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.reel-card .rartist{font-size:10px;color:rgba(255,255,255,0.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.reel-play{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:11px;}
+
+/* ── Mood cards row ── */
+.mood-card-h{
+  flex-shrink:0;width:120px;height:80px;border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.05);transition:all 0.25s;
+}
+.mood-card-h:hover{transform:scale(1.05);}
+
+/* ── Song detail page ── */
+#page-song-detail{
+  position:fixed;inset:0;z-index:300;
+  background:linear-gradient(180deg,#1a0a2e 0%,#0a0a1a 100%);
+  display:none;flex-direction:column;overflow-y:auto;
+}
+#page-song-detail.open{display:flex;}
+.detail-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;flex-shrink:0;}
+.detail-art{
+  width:280px;height:280px;border-radius:20px;
+  margin:0 auto 24px;display:flex;align-items:center;justify-content:center;
+  font-size:80px;overflow:hidden;flex-shrink:0;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+.detail-art img{width:100%;height:100%;object-fit:cover;border-radius:20px;}
+
+/* ── Search page ── */
+.search-input-wrap{padding:14px 16px;}
+.search-input{
+  width:100%;padding:13px 16px 13px 44px;
+  background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);
+  border-radius:14px;color:#fff;font-family:'Poppins',sans-serif;font-size:14px;
+  outline:none;transition:border-color 0.2s;
+}
+.search-input::placeholder{color:rgba(255,255,255,0.3);}
+.search-input:focus{border-color:rgba(168,85,247,0.7);}
+.search-icon-abs{position:absolute;left:28px;top:50%;transform:translateY(-50%);font-size:16px;opacity:0.45;}
+.genre-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;}
+.genre-card{
+  height:80px;border-radius:14px;display:flex;align-items:center;
+  padding:0 16px;font-weight:700;font-size:15px;cursor:pointer;
+  transition:transform 0.2s;overflow:hidden;position:relative;
+}
+.genre-card:hover{transform:scale(1.03);}
+.genre-card span{position:relative;z-index:2;}
+
+/* ── Reels full page ── */
+#page-reels{position:fixed;inset:0;z-index:300;background:#000;display:none;flex-direction:column;}
+#page-reels.open{display:flex;}
+.reel-viewer{flex:1;position:relative;overflow:hidden;}
+.reel-video-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.reel-video-wrap video{width:100%;height:100%;object-fit:cover;}
+.reel-video-wrap .reel-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;background:linear-gradient(135deg,#1a0a2e,#0a1a2e);}
+.reel-actions{position:absolute;right:12px;bottom:100px;display:flex;flex-direction:column;gap:20px;align-items:center;}
+.reel-action-btn{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
+.reel-action-btn .icon{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.reel-action-btn span{font-size:11px;color:rgba(255,255,255,0.7);}
+.reel-info{position:absolute;left:14px;bottom:90px;right:70px;}
+.reel-info .rtitle{font-size:15px;font-weight:700;margin-bottom:3px;}
+.reel-info .rartist{font-size:13px;color:rgba(255,255,255,0.65);}
+.reel-info .rmood{display:inline-block;margin-top:6px;font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(168,85,247,0.25);border:1px solid rgba(168,85,247,0.4);}
+.reel-progress{position:absolute;bottom:72px;left:0;right:0;height:3px;background:rgba(255,255,255,0.2);}
+.reel-progress-fill{height:100%;background:linear-gradient(90deg,#a855f7,#60d9ff);transition:width 0.3s;}
+.reel-song-bar{position:absolute;bottom:0;left:0;right:0;height:68px;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);padding:12px 16px;display:flex;align-items:center;gap:12px;}
+
+/* ── Mini player ── */
+.mini-player{
+  position:fixed;bottom:var(--nav-h);left:0;right:0;max-width:430px;margin:0 auto;
+  height:var(--player-h);background:rgba(15,10,25,0.97);backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:none;align-items:center;gap:14px;padding:0 14px;z-index:100;
+}
+.mini-player.visible{display:flex;}
+.pb-art{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;}
+.pb-art img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
+.pb-info{flex:1;min-width:0;}
+.pb-info p{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pb-info span{color:rgba(255,255,255,0.4);font-size:11px;}
+.pb-prog{position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,0.1);}
+.pb-prog-fill{height:100%;background:linear-gradient(90deg,#a855f7,#60d9ff);transition:width 0.1s;}
+.pb-ctrl{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.pb-btn{background:none;border:none;color:rgba(255,255,255,0.7);font-size:18px;cursor:pointer;padding:6px;}
+.pb-play{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#3b82f6);border:none;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pb-video-btn{font-size:11px;padding:4px 10px;border-radius:8px;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;cursor:pointer;font-family:'Poppins',sans-serif;display:none;}
+.pb-video-btn.show{display:block;}
+
+/* ── Bottom nav ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;
+  height:var(--nav-h);background:rgba(10,10,15,0.97);backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:space-around;z-index:100;
+}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 14px;border-radius:12px;transition:all 0.2s;border:none;background:none;color:rgba(255,255,255,0.42);font-family:'Poppins',sans-serif;}
+.nav-btn .nav-ic{font-size:20px;transition:transform 0.2s;}
+.nav-btn .nav-lb{font-size:10px;font-weight:500;}
+.nav-btn.active{color:#a855f7;}
+.nav-btn.active .nav-ic{transform:scale(1.15);}
+
+/* ── Progress bar ── */
+.prog{height:3px;border-radius:2px;background:rgba(255,255,255,0.1);cursor:pointer;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#a855f7,#60d9ff);transition:width 0.1s;}
+
+/* ── Waveform ── */
+.wbar{width:3px;border-radius:2px;background:linear-gradient(to top,#a855f7,#60d9ff);animation:wb 0.75s ease-in-out infinite alternate;}
+@keyframes wb{from{height:3px}to{height:20px}}
+
+/* ── Video modal ── */
+.video-modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;}
+.video-modal.open{display:flex;}
+.video-modal video{max-width:100%;max-height:70vh;border-radius:14px;background:#000;}
+.video-modal .vm-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:10px;padding:8px 16px;font-family:'Poppins',sans-serif;cursor:pointer;font-size:14px;}
+.video-modal .vm-title{color:#fff;font-size:15px;font-weight:600;margin-top:16px;text-align:center;padding:0 20px;}
+
+/* ── Upload section ── */
+.upload-zone{border:2px dashed rgba(168,85,247,0.35);border-radius:16px;padding:28px;text-align:center;cursor:pointer;transition:all 0.25s;background:rgba(168,85,247,0.04);}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(168,85,247,0.7);background:rgba(168,85,247,0.1);}
+.finp{width:100%;padding:11px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);border-radius:12px;color:#fff;font-family:'Poppins',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.finp::placeholder{color:rgba(255,255,255,0.3);}
+.finp:focus{border-color:rgba(168,85,247,0.7);}
+.finp option{background:#1a1a2e;}
+.flabel{display:block;font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px;}
+.rbtn{border:none;border-radius:12px;background:linear-gradient(135deg,#ff4d8d,#a855f7,#3b82f6,#10b981);background-size:250% 250%;animation:gs 3s ease infinite;color:#fff;font-family:'Poppins',sans-serif;font-weight:600;cursor:pointer;transition:transform 0.2s;}
+.rbtn:hover{transform:scale(1.03);}
+@keyframes gs{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.toast{padding:12px 16px;border-radius:12px;font-size:13px;margin-top:12px;display:none;}
+.toast.ok{background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:#34d399;}
+.toast.err{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;}
+.glass-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:18px;}
+
+/* ── Like animation ── */
+@keyframes heartpop{0%{transform:scale(1);}50%{transform:scale(1.4);}100%{transform:scale(1);}}
+.liked{animation:heartpop 0.3s ease;}
+.gt{background:linear-gradient(135deg,#ff6eb4,#a78bfa,#60d9ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* ── Mood colors ── */
+.mc-happy{color:#fbbf24;} .mc-sad{color:#60a5fa;} .mc-energetic{color:#f87171;} .mc-calm{color:#34d399;} .mc-romantic{color:#f472b6;}
+.mbg-happy{background:linear-gradient(135deg,#fbbf24,#f59e0b);}
+.mbg-sad{background:linear-gradient(135deg,#60a5fa,#3b82f6);}
+.mbg-energetic{background:linear-gradient(135deg,#f87171,#ef4444);}
+.mbg-calm{background:linear-gradient(135deg,#34d399,#10b981);}
+.mbg-romantic{background:linear-gradient(135deg,#f472b6,#ec4899);}
+
+/* ── History ── */
+.hist-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.2s;border-radius:12px;margin:0 8px;}
+.hist-item:hover{background:rgba(168,85,247,0.1);}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(168,85,247,0.3);border-radius:2px;}
+
+/* ── Avatar ── */
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a855f7);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<!-- ══ APP SHELL ══════════════════════════════════════════════════════════ -->
+<div class="app">
+
+  <!-- ══ PAGE: DISCOVER ══════════════════════════════════════════════════ -->
+  <div class="page active" id="page-discover">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <p style="font-size:12px;color:rgba(255,255,255,0.4);">Good evening 👋</p>
+          <h2 style="font-size:18px;font-weight:800;" class="gt" id="top-username">MoodWave</h2>
+        </div>
+        <div class="avatar" id="top-avatar">U</div>
+      </div>
+      <!-- Search pill -->
+      <div class="search-pill" onclick="showPage('search')">
+        <span style="font-size:16px;opacity:0.5;">🔍</span>
+        <span>What do you want to listen to?</span>
+      </div>
     </div>
-    <div id="mood-banner" style="display:none;margin-bottom:22px;"></div>
-    <div class="songs-grid" id="discover-grid"></div>
-    <div id="discover-empty" class="empty" style="display:none;"><div style="font-size:40px;margin-bottom:10px;">🎵</div><p>No songs yet. <span style="color:#a78bfa;cursor:pointer;" onclick="showSection('upload')">Add music →</span></p></div>
-    <div id="recs-section" style="display:none;margin-top:28px;">
-      <p style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">Recommended for you</p>
-      <div class="songs-grid" id="recs-grid"></div>
+
+    <!-- Category chips -->
+    <div class="cat-chips">
+      <button class="chip on" onclick="filterCat('all',this)">All</button>
+      <button class="chip" onclick="filterCat('happy',this)">😄 Happy</button>
+      <button class="chip" onclick="filterCat('sad',this)">😢 Sad</button>
+      <button class="chip" onclick="filterCat('energetic',this)">⚡ Energetic</button>
+      <button class="chip" onclick="filterCat('calm',this)">🌊 Calm</button>
+      <button class="chip" onclick="filterCat('romantic',this)">💕 Romantic</button>
+    </div>
+
+    <!-- Reels row -->
+    <div class="sec-hd">
+      <h3>🎬 Reels</h3>
+      <a onclick="showReelsPage()">See all</a>
+    </div>
+    <div class="reel-row" id="reel-row"></div>
+
+    <!-- Mood banner after click -->
+    <div id="mood-banner" style="display:none;padding:0 16px;margin-bottom:8px;">
+      <div id="mood-banner-inner" style="border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;border:1px solid rgba(255,255,255,0.1);">
+        <div style="font-size:34px;" id="mb-emoji">🎵</div>
+        <div style="flex:1;">
+          <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.4);margin-bottom:1px;">Detected mood</p>
+          <p style="font-size:20px;font-weight:800;" id="mb-label">—</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.35);" id="mb-sub"></p>
+        </div>
+        <div style="display:flex;gap:2px;align-items:flex-end;height:24px;" id="mb-wave"></div>
+      </div>
+    </div>
+
+    <!-- Featured songs (horizontal cards) -->
+    <div class="sec-hd"><h3>🔥 Featured</h3><a onclick="filterCat('all',null)">See all</a></div>
+    <div class="h-scroll" id="featured-row"></div>
+
+    <!-- All songs list -->
+    <div class="sec-hd"><h3>🎵 All songs</h3><span id="songs-count" style="font-size:12px;color:rgba(255,255,255,0.3);"></span></div>
+    <div id="all-songs-list"></div>
+    <div id="songs-empty" style="display:none;text-align:center;padding:40px;color:rgba(255,255,255,0.3);">
+      <div style="font-size:36px;margin-bottom:10px;">🎵</div>
+      <p>No songs yet. <span style="color:#a78bfa;cursor:pointer;" onclick="showPage('upload')">Add music →</span></p>
+    </div>
+
+    <!-- Recommendations -->
+    <div id="recs-wrap" style="display:none;">
+      <div class="sec-hd"><h3>✨ Recommended for you</h3></div>
+      <div id="recs-list"></div>
     </div>
   </div>
 
-  <!-- ── BY MOOD ── -->
-  <div class="page-section" id="sec-mood">
-    <p class="sec-title">Browse by <span class="gt">Mood</span></p>
-    <p class="sec-sub">Pick a mood to see matching songs</p>
-    <div class="moods-grid" id="mood-cards-grid"></div>
-    <div id="mood-songs-view" style="display:none;">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-        <button onclick="closeMoodView()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:10px;padding:7px 16px;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">← Back</button>
-        <div><h3 id="mood-view-title" style="font-size:20px;font-weight:800;"></h3><p id="mood-view-sub" style="font-size:12px;color:rgba(255,255,255,0.38);"></p></div>
-        <div style="display:flex;gap:3px;align-items:flex-end;height:24px;margin-left:auto;" id="mood-view-wave"></div>
+  <!-- ══ PAGE: SEARCH ════════════════════════════════════════════════════ -->
+  <div class="page" id="page-search">
+    <div class="top-bar" style="padding-bottom:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="showPage('discover')" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;">←</button>
+        <div style="position:relative;flex:1;">
+          <span class="search-icon-abs">🔍</span>
+          <input class="search-input" id="search-input" placeholder="Songs, artists, moods…" oninput="doSearch(this.value)" autofocus/>
+        </div>
       </div>
-      <div class="songs-grid" id="mood-songs-grid"></div>
-      <div id="mood-songs-empty" class="empty" style="display:none;"><div style="font-size:40px;margin-bottom:10px;">🎵</div><p>No songs for this mood yet.<br/><span style="color:#a78bfa;cursor:pointer;" onclick="showSection('upload')">Add music →</span></p></div>
+    </div>
+
+    <!-- Search results -->
+    <div id="search-results" style="display:none;padding-top:8px;">
+      <div class="sec-hd"><h3>Results</h3><span id="result-count" style="font-size:12px;color:rgba(255,255,255,0.3);"></span></div>
+      <div id="results-list"></div>
+    </div>
+
+    <!-- Browse genres -->
+    <div id="browse-genres">
+      <div class="sec-hd"><h3>Browse genres</h3></div>
+      <div class="genre-grid">
+        <div class="genre-card" style="background:linear-gradient(135deg,#7c3aed,#a855f7);" onclick="searchByGenre('Pop')"><span>🎤 Pop</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,#dc2626,#f87171);" onclick="searchByGenre('Rock')"><span>🎸 Rock</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,#0369a1,#38bdf8);" onclick="searchByGenre('Soul')"><span>🎷 Soul</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,#065f46,#34d399);" onclick="searchByGenre('Ambient')"><span>🌿 Ambient</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,#92400e,#fbbf24);" onclick="searchByGenre('Classical')"><span>🎻 Classical</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,#be185d,#f472b6);" onclick="searchByGenre('Funk')"><span>🕺 Funk</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,#1e3a5f,#60a5fa);" onclick="searchByGenre('Country')"><span>🤠 Country</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,#3f3f46,#a1a1aa);" onclick="searchByGenre('')"><span>🎵 Other</span></div>
+      </div>
+
+      <div class="sec-hd" style="margin-top:8px;"><h3>Browse moods</h3></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;">
+        <div class="genre-card" style="background:linear-gradient(135deg,rgba(251,191,36,0.3),rgba(245,158,11,0.2));border:1px solid rgba(251,191,36,0.3);" onclick="filterAndGo('happy')"><span>😄 Happy</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,rgba(96,165,250,0.3),rgba(59,130,246,0.2));border:1px solid rgba(96,165,250,0.3);" onclick="filterAndGo('sad')"><span>😢 Sad</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,rgba(248,113,113,0.3),rgba(239,68,68,0.2));border:1px solid rgba(248,113,113,0.3);" onclick="filterAndGo('energetic')"><span>⚡ Energetic</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,rgba(52,211,153,0.3),rgba(16,185,129,0.2));border:1px solid rgba(52,211,153,0.3);" onclick="filterAndGo('calm')"><span>🌊 Calm</span></div>
+        <div class="genre-card" style="background:linear-gradient(135deg,rgba(244,114,182,0.3),rgba(236,72,153,0.2));border:1px solid rgba(244,114,182,0.3);" onclick="filterAndGo('romantic')"><span>💕 Romantic</span></div>
+      </div>
     </div>
   </div>
 
-  <!-- ── ADD MUSIC ── -->
-  <div class="page-section" id="sec-upload">
-    <p class="sec-title">Add <span class="gt">Music</span></p>
-    <p class="sec-sub">Upload audio + video files and fill in the song details</p>
+  <!-- ══ PAGE: UPLOAD ════════════════════════════════════════════════════ -->
+  <div class="page" id="page-upload">
+    <div class="top-bar"><h2 style="font-size:18px;font-weight:800;">Add <span class="gt">Music</span></h2></div>
+    <div style="padding:16px;">
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-
-      <!-- Upload zone column -->
-      <div style="display:flex;flex-direction:column;gap:16px;">
-
-        <!-- Audio upload -->
-        <div class="glass" style="padding:22px;">
-          <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:14px;">🎵 Audio file <span style="font-size:11px;color:rgba(255,255,255,0.3);">(MP3, WAV, OGG, FLAC · max 50MB)</span></p>
-          <div class="upload-zone" id="audio-drop" onclick="document.getElementById('audio-input').click()"
-            ondragover="dzOver(event,'audio-drop')" ondragleave="dzLeave('audio-drop')" ondrop="dzDrop(event,'audio-input','audio-drop')">
-            <div style="font-size:32px;margin-bottom:8px;">🎧</div>
-            <p style="font-weight:600;font-size:13px;margin-bottom:3px;" id="audio-drop-text">Click or drag audio file here</p>
-            <p style="font-size:11px;color:rgba(255,255,255,0.3);">MP3 · WAV · OGG · FLAC · AAC · M4A</p>
-            <input type="file" id="audio-input" accept="audio/*" style="display:none;" onchange="fileChosen(this,'audio-drop','audio-drop-text','audio-info','audio-info-name','audio-info-size')"/>
-          </div>
-          <div id="audio-info" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:10px;">
-            <p style="color:#34d399;font-size:13px;font-weight:500;" id="audio-info-name"></p>
-            <p style="color:rgba(255,255,255,0.3);font-size:11px;" id="audio-info-size"></p>
-          </div>
-        </div>
-
-        <!-- Video upload -->
-        <div class="glass" style="padding:22px;">
-          <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:14px;">🎬 Video file <span style="font-size:11px;color:rgba(255,255,255,0.3);">(MP4, WebM, MKV · max 200MB)</span></p>
-          <div class="upload-zone" id="video-drop" onclick="document.getElementById('video-input').click()"
-            ondragover="dzOver(event,'video-drop')" ondragleave="dzLeave('video-drop')" ondrop="dzDrop(event,'video-input','video-drop')">
-            <div style="font-size:32px;margin-bottom:8px;">🎬</div>
-            <p style="font-weight:600;font-size:13px;margin-bottom:3px;" id="video-drop-text">Click or drag video file here</p>
-            <p style="font-size:11px;color:rgba(255,255,255,0.3);">MP4 · WebM · MKV · AVI · MOV</p>
-            <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="fileChosen(this,'video-drop','video-drop-text','video-info','video-info-name','video-info-size')"/>
-          </div>
-          <div id="video-info" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:10px;">
-            <p style="color:#60a5fa;font-size:13px;font-weight:500;" id="video-info-name"></p>
-            <p style="color:rgba(255,255,255,0.3);font-size:11px;" id="video-info-size"></p>
-          </div>
-        </div>
-
-        <!-- OR URL -->
-        <div class="glass" style="padding:22px;">
-          <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:12px;">🔗 Or paste audio URL</p>
-          <input id="new-url" class="finp" type="url" placeholder="https://example.com/song.mp3"/>
+      <!-- Photo upload -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:12px;">🖼 Song cover photo</p>
+        <div class="upload-zone" id="photo-drop" onclick="document.getElementById('photo-input').click()"
+          ondragover="dzOver(event,'photo-drop')" ondragleave="dzLeave('photo-drop')" ondrop="dzDrop(event,'photo-input','photo-drop')">
+          <div id="photo-preview" style="width:80px;height:80px;border-radius:12px;margin:0 auto 8px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;">🖼</div>
+          <p style="font-size:13px;font-weight:500;margin-bottom:3px;" id="photo-drop-text">Click to add cover photo</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.3);">JPG · PNG · WebP</p>
+          <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="photoChosen(this)"/>
         </div>
       </div>
 
-      <!-- Details form -->
-      <div class="glass" style="padding:24px;">
-        <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:16px;">Song details</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div><label class="flabel">Title *</label><input id="new-title" class="finp" placeholder="e.g. Shape of You"/></div>
-          <div><label class="flabel">Artist *</label><input id="new-artist" class="finp" placeholder="e.g. Ed Sheeran"/></div>
+      <!-- Audio upload -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:12px;">🎵 Audio file</p>
+        <div class="upload-zone" id="audio-drop" onclick="document.getElementById('audio-input').click()"
+          ondragover="dzOver(event,'audio-drop')" ondragleave="dzLeave('audio-drop')" ondrop="dzDrop(event,'audio-input','audio-drop')">
+          <div style="font-size:28px;margin-bottom:6px;">🎧</div>
+          <p style="font-size:13px;font-weight:500;margin-bottom:3px;" id="audio-drop-text">Click or drag audio file</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.3);">MP3 · WAV · OGG · max 50MB</p>
+          <input type="file" id="audio-input" accept="audio/*" style="display:none;" onchange="fileChosen(this,'audio-drop','audio-drop-text','audio-info','audio-info-name','audio-info-size')"/>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-          <div><label class="flabel">Genre</label><input id="new-genre" class="finp" placeholder="e.g. Pop"/></div>
+        <div id="audio-info" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:10px;">
+          <p style="color:#34d399;font-size:12px;font-weight:500;" id="audio-info-name"></p>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;" id="audio-info-size"></p>
+        </div>
+      </div>
+
+      <!-- Video upload -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:12px;">🎬 Video file (optional)</p>
+        <div class="upload-zone" id="video-drop" onclick="document.getElementById('video-input').click()"
+          ondragover="dzOver(event,'video-drop')" ondragleave="dzLeave('video-drop')" ondrop="dzDrop(event,'video-input','video-drop')">
+          <div style="font-size:28px;margin-bottom:6px;">🎬</div>
+          <p style="font-size:13px;font-weight:500;margin-bottom:3px;" id="video-drop-text">Click or drag video file</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.3);">MP4 · WebM · max 200MB</p>
+          <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="fileChosen(this,'video-drop','video-drop-text','video-info','video-info-name','video-info-size')"/>
+        </div>
+        <div id="video-info" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:10px;">
+          <p style="color:#60a5fa;font-size:12px;font-weight:500;" id="video-info-name"></p>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;" id="video-info-size"></p>
+        </div>
+      </div>
+
+      <!-- Song details -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);margin-bottom:14px;">Song details</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div><label class="flabel">Title *</label><input id="new-title" class="finp" placeholder="Song title"/></div>
+          <div><label class="flabel">Artist *</label><input id="new-artist" class="finp" placeholder="Artist name"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div><label class="flabel">Genre</label><input id="new-genre" class="finp" placeholder="Pop, Rock…"/></div>
           <div>
             <label class="flabel">Mood *</label>
             <select id="new-mood" class="finp">
-              <option value="">Select mood</option>
+              <option value="">Mood</option>
               <option value="happy">😄 Happy</option>
               <option value="sad">😢 Sad</option>
               <option value="energetic">⚡ Energetic</option>
@@ -284,438 +647,798 @@ body{font-family:'Poppins',sans-serif;background:#060612;color:#fff;min-height:1
             </select>
           </div>
         </div>
-        <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:rgba(255,255,255,0.28);margin-bottom:10px;">Audio features</p>
-        <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:18px;">
-          <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><label style="font-size:12px;color:rgba(255,255,255,0.45);">Tempo (BPM)</label><span id="sv-tempo" style="font-size:12px;color:#a855f7;font-weight:600;">120</span></div><input type="range" min="40" max="220" value="120" id="sl-tempo" oninput="document.getElementById('sv-tempo').textContent=this.value" style="width:100%;accent-color:#a855f7;"/></div>
-          <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><label style="font-size:12px;color:rgba(255,255,255,0.45);">Energy</label><span id="sv-energy" style="font-size:12px;color:#60d9ff;font-weight:600;">0.50</span></div><input type="range" min="0" max="100" value="50" id="sl-energy" oninput="document.getElementById('sv-energy').textContent=(this.value/100).toFixed(2)" style="width:100%;accent-color:#60d9ff;"/></div>
-          <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><label style="font-size:12px;color:rgba(255,255,255,0.45);">Valence</label><span id="sv-valence" style="font-size:12px;color:#34d399;font-weight:600;">0.50</span></div><input type="range" min="0" max="100" value="50" id="sl-valence" oninput="document.getElementById('sv-valence').textContent=(this.value/100).toFixed(2)" style="width:100%;accent-color:#34d399;"/></div>
-          <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><label style="font-size:12px;color:rgba(255,255,255,0.45);">Danceability</label><span id="sv-dance" style="font-size:12px;color:#f472b6;font-weight:600;">0.50</span></div><input type="range" min="0" max="100" value="50" id="sl-dance" oninput="document.getElementById('sv-dance').textContent=(this.value/100).toFixed(2)" style="width:100%;accent-color:#f472b6;"/></div>
+        <label class="flabel">Audio URL (optional)</label>
+        <input id="new-url" class="finp" type="url" placeholder="https://…" style="margin-bottom:14px;"/>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <label style="font-size:11px;color:rgba(255,255,255,0.45);">Tempo BPM</label>
+              <span id="sv-tempo" style="font-size:11px;color:#a855f7;font-weight:600;">120</span>
+            </div>
+            <input type="range" min="40" max="220" value="120" id="sl-tempo" oninput="document.getElementById('sv-tempo').textContent=this.value" style="width:100%;accent-color:#a855f7;"/>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <label style="font-size:11px;color:rgba(255,255,255,0.45);">Energy</label>
+              <span id="sv-energy" style="font-size:11px;color:#60d9ff;font-weight:600;">0.50</span>
+            </div>
+            <input type="range" min="0" max="100" value="50" id="sl-energy" oninput="document.getElementById('sv-energy').textContent=(this.value/100).toFixed(2)" style="width:100%;accent-color:#60d9ff;"/>
+          </div>
         </div>
+
         <div style="display:flex;gap:10px;">
-          <button class="rbtn" onclick="saveSong()" style="flex:1;padding:13px;font-size:13px;" id="save-btn">Save song</button>
-          <button onclick="clearForm()" style="padding:13px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.55);font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">Clear</button>
+          <button class="rbtn" id="save-btn" onclick="saveSong()" style="flex:1;padding:13px;font-size:13px;">Save song</button>
+          <button onclick="clearForm()" style="padding:13px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.55);font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;">Clear</button>
         </div>
         <div class="toast" id="save-toast"></div>
       </div>
-    </div>
 
-    <!-- Library list -->
-    <div class="glass" style="padding:24px;margin-top:20px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <p style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.65);">Song library</p>
-        <span id="library-count" style="font-size:12px;color:rgba(255,255,255,0.3);"></span>
+      <!-- Library -->
+      <div class="glass-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.65);">Song library</p>
+          <span id="lib-count" style="font-size:11px;color:rgba(255,255,255,0.3);"></span>
+        </div>
+        <div id="lib-list"></div>
       </div>
-      <div id="library-list"></div>
     </div>
   </div>
 
-  <!-- ── HISTORY ── -->
-  <div class="page-section" id="sec-history">
-    <p class="sec-title">Listening <span class="gt">History</span></p>
-    <p class="sec-sub">Your recent plays this session</p>
-    <div id="history-list"></div>
-    <div id="history-empty" class="empty" style="display:none;"><div style="font-size:40px;margin-bottom:10px;">📜</div><p>No history yet. Start playing!</p></div>
+  <!-- ══ PAGE: HISTORY ═══════════════════════════════════════════════════ -->
+  <div class="page" id="page-history">
+    <div class="top-bar"><h2 style="font-size:18px;font-weight:800;">Listening <span class="gt">History</span></h2></div>
+    <div id="hist-list" style="padding:8px 0;"></div>
+    <div id="hist-empty" style="display:none;text-align:center;padding:48px;color:rgba(255,255,255,0.3);">
+      <div style="font-size:36px;margin-bottom:10px;">📜</div><p>No history yet</p>
+    </div>
   </div>
 
-</main>
+</div><!-- /app -->
+
+<!-- ══ SONG DETAIL PAGE ════════════════════════════════════════════════ -->
+<div id="page-song-detail">
+  <div class="detail-header">
+    <button onclick="closeSongDetail()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;">↓ Back</button>
+    <div style="display:flex;gap:8px;">
+      <span id="det-song-tab" style="padding:6px 14px;border-radius:20px;background:rgba(255,255,255,0.15);font-size:12px;font-weight:600;cursor:pointer;" onclick="showDetailTab('song')">Song</span>
+      <span id="det-video-tab" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.45);display:none;" onclick="showDetailTab('video')">Video</span>
+    </div>
+    <button onclick="shareCurrentSong()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:13px;">⋯</button>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:0 20px 20px;">
+    <!-- Cover art -->
+    <div class="detail-art" id="det-art">🎵</div>
+
+    <!-- Song info + actions -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;">
+      <div style="flex:1;min-width:0;">
+        <h2 id="det-title" style="font-size:22px;font-weight:800;margin-bottom:3px;"></h2>
+        <p id="det-artist" style="font-size:15px;color:rgba(255,255,255,0.55);"></p>
+      </div>
+      <button id="det-like-btn" onclick="toggleLike()" style="background:none;border:none;font-size:26px;cursor:pointer;padding:4px;flex-shrink:0;">🤍</button>
+    </div>
+
+    <!-- Progress -->
+    <div class="prog" id="det-prog" onclick="detSeekTo(event,this)" style="height:4px;margin-bottom:6px;">
+      <div class="prog-fill" id="det-prog-fill" style="width:0%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+      <span id="det-cur" style="font-size:11px;color:rgba(255,255,255,0.35);">0:00</span>
+      <span id="det-dur" style="font-size:11px;color:rgba(255,255,255,0.35);">0:00</span>
+    </div>
+
+    <!-- Controls -->
+    <div style="display:flex;align-items:center;justify-content:space-around;margin-bottom:24px;">
+      <button onclick="prevSong()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:24px;cursor:pointer;">⏮</button>
+      <button id="det-playbtn" onclick="togglePlay()" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#3b82f6);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">▶</button>
+      <button onclick="nextSong()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:24px;cursor:pointer;">⏭</button>
+    </div>
+
+    <!-- Like / Comment / Share row -->
+    <div style="display:flex;justify-content:space-around;padding:16px 0;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:20px;">
+      <button id="det-like-count-btn" onclick="toggleLike()" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Poppins',sans-serif;">
+        <span style="font-size:22px;" id="det-heart-icon">🤍</span>
+        <span style="font-size:11px;" id="det-like-count">0</span>
+      </button>
+      <button onclick="openComments()" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Poppins',sans-serif;">
+        <span style="font-size:22px;">💬</span>
+        <span style="font-size:11px;" id="det-comment-count">0</span>
+      </button>
+      <button onclick="shareCurrentSong()" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Poppins',sans-serif;">
+        <span style="font-size:22px;">↗</span>
+        <span style="font-size:11px;">Share</span>
+      </button>
+      <button onclick="showReelForSong()" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Poppins',sans-serif;" id="reel-btn-detail">
+        <span style="font-size:22px;">🎬</span>
+        <span style="font-size:11px;">Video</span>
+      </button>
+    </div>
+
+    <!-- Mood badge -->
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
+      <span style="font-size:12px;color:rgba(255,255,255,0.4);">Mood:</span>
+      <span id="det-mood-badge" style="font-size:12px;padding:4px 12px;border-radius:20px;font-weight:600;"></span>
+    </div>
+
+    <!-- Recommendations -->
+    <div id="det-recs-wrap" style="display:none;">
+      <p style="font-size:14px;font-weight:700;margin-bottom:12px;color:rgba(255,255,255,0.7);">Up next</p>
+      <div id="det-recs-list"></div>
+    </div>
+  </div>
 </div>
 
-<!-- ══ MINI PLAYER ══════════════════════════════════════════════════════════ -->
-<div class="player-bar" id="player-bar">
-  <div style="display:flex;align-items:center;gap:12px;min-width:190px;">
-    <div id="pb-art" style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#a855f7,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🎵</div>
-    <div style="min-width:0;"><p id="pb-title" style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">—</p><p id="pb-artist" style="color:rgba(255,255,255,0.38);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">—</p></div>
-  </div>
-  <div style="flex:1;max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:6px;">
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
-      <button onclick="prevSong()" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;">⏮</button>
-      <button id="pb-playbtn" onclick="togglePlay()" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#3b82f6);border:none;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;">▶</button>
-      <button onclick="nextSong()" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;">⏭</button>
-      <button id="pb-video-btn" onclick="openVideoModal()" style="display:none;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;border-radius:8px;padding:5px 12px;font-size:12px;font-family:'Poppins',sans-serif;cursor:pointer;">🎬 Video</button>
+<!-- ══ REELS FULL PAGE ════════════════════════════════════════════════ -->
+<div id="page-reels">
+  <div class="reel-viewer">
+    <div class="reel-video-wrap" id="reel-video-wrap">
+      <div class="reel-fallback" id="reel-fallback">🎵</div>
+      <video id="reel-video" loop playsinline style="display:none;"></video>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span id="pb-cur" style="font-size:11px;color:rgba(255,255,255,0.3);min-width:30px;text-align:right;">0:00</span>
-      <div class="prog" style="flex:1;" onclick="seekTo(event,this)"><div class="prog-fill" id="pb-prog" style="width:0%"></div></div>
-      <span id="pb-dur" style="font-size:11px;color:rgba(255,255,255,0.3);min-width:30px;">0:00</span>
+    <div class="reel-actions">
+      <div class="reel-action-btn" onclick="toggleReelLike()">
+        <div class="icon" id="reel-like-icon">🤍</div>
+        <span id="reel-like-count">0</span>
+      </div>
+      <div class="reel-action-btn" onclick="openComments()">
+        <div class="icon">💬</div>
+        <span id="reel-comment-count">0</span>
+      </div>
+      <div class="reel-action-btn" onclick="shareCurrentSong()">
+        <div class="icon">↗</div>
+        <span>Share</span>
+      </div>
+    </div>
+    <div class="reel-info">
+      <div class="rtitle" id="reel-title"></div>
+      <div class="rartist" id="reel-artist"></div>
+      <div class="rmood" id="reel-mood"></div>
+    </div>
+    <div class="reel-progress"><div class="reel-progress-fill" id="reel-prog-fill" style="width:0%;"></div></div>
+    <div class="reel-song-bar">
+      <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,0.1);" id="reel-bar-art">🎵</div>
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="reel-bar-title">—</p>
+        <p style="font-size:11px;color:rgba(255,255,255,0.45);" id="reel-bar-artist">—</p>
+      </div>
+      <button onclick="playFromReel()" style="background:linear-gradient(135deg,#a855f7,#3b82f6);border:none;color:#fff;border-radius:8px;padding:7px 14px;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">Play</button>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;min-width:130px;justify-content:flex-end;">
-    <span style="font-size:15px;color:rgba(255,255,255,0.35);">🔊</span>
-    <input type="range" min="0" max="100" value="80" id="vol-sl" style="width:80px;accent-color:#a855f7;" oninput="setVol(this.value)"/>
+  <button onclick="closeReels()" style="position:absolute;top:16px;left:16px;background:rgba(0,0,0,0.5);border:none;color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;z-index:10;">✕ Close</button>
+  <div style="position:absolute;top:16px;right:16px;display:flex;gap:8px;z-index:10;">
+    <button onclick="prevReel()" style="background:rgba(0,0,0,0.5);border:none;color:#fff;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:16px;">↑</button>
+    <button onclick="nextReel()" style="background:rgba(0,0,0,0.5);border:none;color:#fff;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:16px;">↓</button>
   </div>
 </div>
 
-<!-- ══ JS ══════════════════════════════════════════════════════════════════ -->
+<!-- ══ VIDEO MODAL ════════════════════════════════════════════════════ -->
+<div class="video-modal" id="video-modal">
+  <button class="vm-close" onclick="closeVideoModal()">✕ Close</button>
+  <video id="modal-video" controls style="max-width:100%;max-height:65vh;border-radius:14px;background:#000;"></video>
+  <p class="vm-title" id="modal-video-title"></p>
+  <div style="display:none;" id="modal-no-video">
+    <div style="font-size:48px;margin-bottom:12px;">🎬</div>
+    <p style="color:rgba(255,255,255,0.45);font-size:14px;">No video available for this song</p>
+  </div>
+</div>
+
+<!-- ══ COMMENTS PANEL ════════════════════════════════════════════════ -->
+<div id="comments-panel" style="position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;z-index:400;background:rgba(15,10,25,0.98);backdrop-filter:blur(20px);border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,0.1);transform:translateY(100%);transition:transform 0.3s ease;padding:16px;">
+  <div style="width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 14px;"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <p style="font-weight:700;font-size:15px;">Comments <span id="comment-total" style="color:rgba(255,255,255,0.4);font-size:13px;">0</span></p>
+    <button onclick="closeComments()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;">✕</button>
+  </div>
+  <div id="comments-list" style="max-height:280px;overflow-y:auto;margin-bottom:12px;"></div>
+  <div style="display:flex;gap:10px;">
+    <input id="comment-input" placeholder="Add a comment…" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-family:'Poppins',sans-serif;font-size:13px;outline:none;"/>
+    <button onclick="postComment()" style="padding:10px 16px;background:linear-gradient(135deg,#a855f7,#3b82f6);border:none;border-radius:12px;color:#fff;font-family:'Poppins',sans-serif;cursor:pointer;font-size:13px;">Post</button>
+  </div>
+</div>
+
+<!-- ══ MINI PLAYER ════════════════════════════════════════════════════ -->
+<div class="mini-player" id="mini-player">
+  <div class="pb-art" id="pb-art">🎵</div>
+  <div class="pb-info" onclick="openSongDetail(currentIdx)">
+    <p id="pb-title">—</p>
+    <span id="pb-artist">—</span>
+  </div>
+  <div class="pb-ctrl">
+    <button class="pb-btn" id="pb-video-btn" onclick="openVideoModal()" style="display:none;font-size:14px;padding:4px 8px;background:rgba(96,165,250,0.15);border-radius:8px;border:1px solid rgba(96,165,250,0.3);color:#60a5fa;">🎬</button>
+    <button class="pb-btn" onclick="togglePlay()">
+      <div id="pb-playbtn" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:14px;">▶</div>
+    </button>
+    <button class="pb-btn" onclick="nextSong()">⏭</button>
+  </div>
+  <div class="pb-prog"><div class="pb-prog-fill" id="pb-prog-fill" style="width:0%;"></div></div>
+</div>
+
+<!-- ══ BOTTOM NAV ══════════════════════════════════════════════════════ -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-discover" onclick="showPage('discover')">
+    <span class="nav-ic">🏠</span><span class="nav-lb">Home</span>
+  </button>
+  <button class="nav-btn" id="nav-search" onclick="showPage('search')">
+    <span class="nav-ic">🔍</span><span class="nav-lb">Search</span>
+  </button>
+  <button class="nav-btn" id="nav-upload" onclick="showPage('upload')">
+    <span class="nav-ic" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:22px;">＋</span>
+    <span class="nav-lb">Add</span>
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="showPage('history')">
+    <span class="nav-ic">📜</span><span class="nav-lb">History</span>
+  </button>
+  <button class="nav-btn" id="nav-profile" onclick="doLogout()">
+    <span class="nav-ic">🚪</span><span class="nav-lb">Logout</span>
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════════════ -->
 <script>
 const SESSION_ID='sess_'+Math.random().toString(36).substr(2,9);
 const MOOD_CFG={
-  happy:    {emoji:'😄',color:'#fbbf24',bg:'linear-gradient(135deg,#fbbf24,#f59e0b)',light:'rgba(251,191,36,0.10)'},
-  sad:      {emoji:'😢',color:'#60a5fa',bg:'linear-gradient(135deg,#60a5fa,#3b82f6)',light:'rgba(96,165,250,0.10)'},
-  energetic:{emoji:'⚡',color:'#f87171',bg:'linear-gradient(135deg,#f87171,#ef4444)',light:'rgba(248,113,113,0.10)'},
-  calm:     {emoji:'🌊',color:'#34d399',bg:'linear-gradient(135deg,#34d399,#10b981)',light:'rgba(52,211,153,0.10)'},
-  romantic: {emoji:'💕',color:'#f472b6',bg:'linear-gradient(135deg,#f472b6,#ec4899)',light:'rgba(244,114,182,0.10)'},
+  happy:   {emoji:'😄',color:'#fbbf24',bg:'linear-gradient(135deg,#fbbf24,#f59e0b)',light:'rgba(251,191,36,0.12)'},
+  sad:     {emoji:'😢',color:'#60a5fa',bg:'linear-gradient(135deg,#60a5fa,#3b82f6)',light:'rgba(96,165,250,0.12)'},
+  energetic:{emoji:'⚡',color:'#f87171',bg:'linear-gradient(135deg,#f87171,#ef4444)',light:'rgba(248,113,113,0.12)'},
+  calm:    {emoji:'🌊',color:'#34d399',bg:'linear-gradient(135deg,#34d399,#10b981)',light:'rgba(52,211,153,0.12)'},
+  romantic:{emoji:'💕',color:'#f472b6',bg:'linear-gradient(135deg,#f472b6,#ec4899)',light:'rgba(244,114,182,0.12)'},
 };
 
-let allSongs=[],history=[],currentIdx=-1,isPlaying=false,elapsed=0,timerRef=null,audioEl=null,currentSong=null;
+let allSongs=[],history=[],likes={},comments={},currentIdx=-1,isPlaying=false,elapsed=0,timerRef=null,audioEl=null,currentSong=null,currentReelIdx=0;
 
-// Floating notes
-const syms=['♩','♪','♫','♬','𝄞'];
-function spawnNote(){
-  const nc=document.getElementById('nc'),n=document.createElement('div');
-  n.className='note';n.textContent=syms[Math.floor(Math.random()*syms.length)];
-  n.style.left=Math.random()*100+'%';const d=10+Math.random()*10;
-  n.style.animationDuration=d+'s';n.style.animationDelay=(Math.random()*-d)+'s';n.style.fontSize=(11+Math.random()*12)+'px';
-  nc.appendChild(n);setTimeout(()=>n.remove(),(d+1)*1000);
-}
-setInterval(spawnNote,800);for(let i=0;i<8;i++)spawnNote();
-
-// ── Section nav ───────────────────────────────────────────────────────────────
-function showSection(id){
-  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
-  const ni=document.getElementById('nav-'+id);if(ni)ni.classList.add('active');
-  if(id==='history')renderHistory();
-  if(id==='upload') {renderLibraryList();}
-  if(id==='mood')   renderMoodCards();
+// ── Load user info ────────────────────────────────────────────────────────────
+async function loadMe(){
+  try{
+    const r=await fetch('/api/me');const d=await r.json();
+    if(!d.logged_in){window.location.href='/login';return;}
+    const n=d.name||'User';
+    document.getElementById('top-username').textContent=n;
+    const av=document.getElementById('top-avatar');
+    av.textContent=n.charAt(0).toUpperCase();
+    if(d.avatar){av.innerHTML=`<img src="${d.avatar}" style="width:100%;height:100%;object-fit:cover;"/>`;}
+  }catch(e){}
 }
 
-// ── Load songs from API ───────────────────────────────────────────────────────
+// ── Load all songs ────────────────────────────────────────────────────────────
 async function loadSongs(){
   try{const r=await fetch('/api/songs');allSongs=await r.json();}catch(e){allSongs=[];}
-  updateMoodCounts();renderDiscoverGrid(allSongs);renderMoodCards();
+  renderAll();
 }
 
-function updateMoodCounts(){
-  ['happy','sad','energetic','calm','romantic'].forEach(m=>{
-    const el=document.getElementById('mc-'+m);
-    if(el)el.textContent=allSongs.filter(s=>s.mood===m).length;
+function renderAll(){
+  renderFeatured(allSongs);
+  renderSongsList(allSongs);
+  renderReels(allSongs);
+  updateLibList();
+}
+
+// ── Page navigation ───────────────────────────────────────────────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('active');
+  if(id==='history')renderHistoryList();
+  if(id==='upload'){updateLibList();}
+  if(id==='search'){setTimeout(()=>document.getElementById('search-input').focus(),100);}
+}
+
+// ── Featured horizontal cards ─────────────────────────────────────────────────
+function renderFeatured(list){
+  const row=document.getElementById('featured-row');row.innerHTML='';
+  list.slice(0,10).forEach((song,i)=>{
+    const cfg=MOOD_CFG[song.mood]||MOOD_CFG.happy;
+    const d=document.createElement('div');d.className='song-card-v';
+    d.onclick=()=>openSongDetail(allSongs.indexOf(song));
+    const imgHtml=song.cover_url
+      ?`<img src="${song.cover_url}" alt="${song.title}"/>`
+      :`<span style="font-size:48px;">${cfg.emoji}</span>`;
+    d.innerHTML=`
+      <div class="thumb" style="background:${cfg.bg};">
+        ${imgHtml}
+        <div class="play-overlay"><span style="font-size:28px;">▶</span></div>
+      </div>
+      <p class="stitle">${song.title}</p>
+      <p class="sartist">${song.artist}</p>`;
+    row.appendChild(d);
   });
 }
 
-// ── Render discover grid ──────────────────────────────────────────────────────
-function renderDiscoverGrid(list){
-  const g=document.getElementById('discover-grid'),e=document.getElementById('discover-empty');
-  g.innerHTML='';
-  if(!list||list.length===0){g.style.display='none';e.style.display='block';return;}
-  g.style.display='grid';e.style.display='none';
-  list.forEach(s=>g.appendChild(makeSongCard(s,()=>analyzeSong(s.id))));
-}
-
-function filterDiscover(mood,btn){
-  document.querySelectorAll('.fpill').forEach(p=>p.classList.remove('on'));if(btn)btn.classList.add('on');
-  renderDiscoverGrid(mood==='all'?allSongs:allSongs.filter(s=>s.mood===mood));
-}
-
-// ── Song card builder ─────────────────────────────────────────────────────────
-function makeSongCard(song, clickFn){
-  const cfg=MOOD_CFG[song.mood]||{emoji:'🎵',color:'#a855f7',bg:'linear-gradient(135deg,#a855f7,#3b82f6)'};
-  const hasAudio = !!song.has_audio || !!song.audio_url;
-  const hasVideo = !!song.has_video;
-
-  // Build media badge HTML
-  const audioBadge = hasAudio
-    ? `<span class="mbadge audio-yes">🎵 Audio</span>`
-    : `<span class="mbadge audio-no">🎵 No audio</span>`;
-  const videoBadge = hasVideo
-    ? `<span class="mbadge video-yes">🎬 Video</span>`
-    : `<span class="mbadge video-no">🎬 No video</span>`;
-
-  const card=document.createElement('div');
-  card.className='song-card';card.id='sc-'+song.id;card.onclick=clickFn;
-  card.innerHTML=`
-    <div class="song-art" style="background:${cfg.bg};">${cfg.emoji}</div>
-    <p style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px;">${song.title}</p>
-    <p style="color:rgba(255,255,255,0.38);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:8px;">${song.artist}</p>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <span class="mpill mp-${song.mood}">${song.mood}</span>
-      <span style="color:rgba(255,255,255,0.2);font-size:10px;">${song.genre||''}</span>
-    </div>
-    <div class="media-badges">${audioBadge}${videoBadge}</div>`;
-  return card;
-}
-
-// ── Mood cards ────────────────────────────────────────────────────────────────
-function goMood(mood){showSection('mood');openMoodView(mood);}
-
-function renderMoodCards(){
-  const g=document.getElementById('mood-cards-grid');
-  g.innerHTML='';document.getElementById('mood-songs-view').style.display='none';
-  ['happy','sad','energetic','calm','romantic'].forEach(mood=>{
-    const cfg=MOOD_CFG[mood],count=allSongs.filter(s=>s.mood===mood).length;
-    const d=document.createElement('div');
-    d.className='mood-card';
-    d.style.borderColor=cfg.color+'44';
-    d.onclick=()=>openMoodView(mood);
-    d.innerHTML=`<div style="font-size:36px;margin-bottom:10px;">${cfg.emoji}</div>
-      <div style="font-size:15px;font-weight:700;color:${cfg.color};margin-bottom:4px;">${mood.charAt(0).toUpperCase()+mood.slice(1)}</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);">${count} song${count!==1?'s':''}</div>`;
-    d.style.setProperty('--hover-bg', cfg.light);
-    g.appendChild(d);
-  });
-}
-
-function openMoodView(mood){
-  const cfg=MOOD_CFG[mood],mSongs=allSongs.filter(s=>s.mood===mood);
-  document.getElementById('mood-cards-grid').style.display='none';
-  document.getElementById('mood-songs-view').style.display='block';
-  document.getElementById('mood-view-title').textContent=cfg.emoji+' '+mood.charAt(0).toUpperCase()+mood.slice(1)+' Vibes';
-  document.getElementById('mood-view-title').style.color=cfg.color;
-  document.getElementById('mood-view-sub').textContent=mSongs.length+' song'+(mSongs.length!==1?'s':'')+' in this mood';
-  const wv=document.getElementById('mood-view-wave');wv.innerHTML='';
-  for(let i=0;i<7;i++){const b=document.createElement('div');b.className='wbar';b.style.animationDelay=(i*0.07)+'s';b.style.background=`linear-gradient(to top,${cfg.color},#fff)`;wv.appendChild(b);}
-  const sg=document.getElementById('mood-songs-grid'),se=document.getElementById('mood-songs-empty');
-  sg.innerHTML='';
-  if(mSongs.length===0){sg.style.display='none';se.style.display='block';return;}
-  sg.style.display='grid';se.style.display='none';
-  mSongs.forEach(s=>sg.appendChild(makeSongCard(s,()=>analyzeSong(s.id))));
-  document.querySelectorAll('.mood-nav').forEach(n=>n.classList.remove('active'));
-  const mn=document.getElementById('mnav-'+mood);if(mn)mn.classList.add('active');
-}
-
-function closeMoodView(){
-  document.getElementById('mood-cards-grid').style.display='grid';
-  document.getElementById('mood-songs-view').style.display='none';
-  document.querySelectorAll('.mood-nav').forEach(n=>n.classList.remove('active'));
-}
-
-// ── Analyze song ──────────────────────────────────────────────────────────────
-async function analyzeSong(songId){
-  document.querySelectorAll('.song-card').forEach(c=>c.classList.remove('playing'));
-  const sc=document.getElementById('sc-'+songId);if(sc)sc.classList.add('playing');
-  try{
-    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({song_id:songId,session_id:SESSION_ID})});
-    const data=await res.json();
-    const song=data.song||allSongs.find(s=>s.id===songId);
-    const mood=data.mood||'happy',cfg=MOOD_CFG[mood]||MOOD_CFG.happy;
-    const conf=Math.round((data.confidence||0.8)*100);
-
-    // Mood banner
-    document.getElementById('mood-banner').style.display='block';
-    document.getElementById('mood-banner').innerHTML=`
-      <div class="mood-banner-wrap" style="background:${cfg.light};border-color:${cfg.color}44;">
-        <div style="font-size:40px;">${cfg.emoji}</div>
-        <div style="flex:1;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.4);margin-bottom:2px;">Detected mood</div>
-          <div style="font-size:26px;font-weight:800;color:${cfg.color};">${mood.charAt(0).toUpperCase()+mood.slice(1)}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Confidence: ${conf}%  ·  Based on ${data.history_count||0} recent plays</div>
-        </div>
-        <div style="display:flex;gap:3px;align-items:flex-end;height:28px;" id="mb-wave"></div>
+// ── All songs list ────────────────────────────────────────────────────────────
+function renderSongsList(list){
+  const el=document.getElementById('all-songs-list');
+  const em=document.getElementById('songs-empty');
+  document.getElementById('songs-count').textContent=list.length+' songs';
+  el.innerHTML='';
+  if(!list.length){el.style.display='none';em.style.display='block';return;}
+  el.style.display='block';em.style.display='none';
+  list.forEach((song,i)=>{
+    const cfg=MOOD_CFG[song.mood]||MOOD_CFG.happy;
+    const hasAudio=!!(song.has_audio||song.audio_url);
+    const hasVideo=!!song.has_video;
+    const d=document.createElement('div');d.className='song-row';d.id='sr-'+song.id;
+    d.onclick=()=>openSongDetail(allSongs.indexOf(song));
+    const imgHtml=song.cover_url
+      ?`<img src="${song.cover_url}" alt="${song.title}"/>`
+      :`<span style="font-size:22px;">${cfg.emoji}</span>`;
+    d.innerHTML=`
+      <div class="snum">${i+1}</div>
+      <div class="sart" style="background:${cfg.bg};">${imgHtml}</div>
+      <div class="sinfo">
+        <p>${song.title}</p>
+        <span>${song.artist} · ${song.genre||''}</span>
+      </div>
+      <div class="sbadge">
+        ${hasAudio?'<span class="mbadge ba">🎵</span>':'<span class="mbadge bna">🎵</span>'}
+        ${hasVideo?'<span class="mbadge bv">🎬</span>':''}
       </div>`;
-    const mbw=document.getElementById('mb-wave');
-    for(let i=0;i<10;i++){const b=document.createElement('div');b.className='wbar';b.style.animationDelay=(i*0.07)+'s';b.style.background=`linear-gradient(to top,${cfg.color},#fff)`;mbw.appendChild(b);}
+    el.appendChild(d);
+  });
+}
 
-    // Recommendations
-    const recs=data.recommendations||[],rg=document.getElementById('recs-grid');
-    rg.innerHTML='';
-    if(recs.length>0){recs.forEach(s=>rg.appendChild(makeSongCard(s,()=>analyzeSong(s.id))));document.getElementById('recs-section').style.display='block';}
-    else document.getElementById('recs-section').style.display='none';
+// ── Reels row ──────────────────────────────────────────────────────────────────
+function renderReels(list){
+  const row=document.getElementById('reel-row');row.innerHTML='';
+  const reelSongs=list.filter(s=>s.has_video||s.audio_url||s.has_audio).slice(0,10);
+  if(!reelSongs.length) reelSongs.push(...list.slice(0,6));
+  reelSongs.forEach((song,i)=>{
+    const cfg=MOOD_CFG[song.mood]||MOOD_CFG.happy;
+    const d=document.createElement('div');d.className='reel-card';
+    d.onclick=()=>{currentReelIdx=allSongs.indexOf(song);openReelsPage();};
+    const imgHtml=song.cover_url
+      ?`<img src="${song.cover_url}" alt="${song.title}" style="width:100%;height:100%;object-fit:cover;"/>`
+      :`<span style="font-size:36px;">${cfg.emoji}</span>`;
+    d.innerHTML=`
+      <div class="rthumb" style="background:${cfg.bg};">${imgHtml}</div>
+      <div class="roverlay">
+        <p class="rtitle">${song.title}</p>
+        <p class="rartist">${song.artist}</p>
+      </div>
+      <div class="reel-play">▶</div>`;
+    row.appendChild(d);
+  });
+}
 
-    if(song){history.unshift({...song,playedAt:new Date().toLocaleTimeString()});if(history.length>30)history.pop();}
-    playSongInPlayer(songId);
-  }catch(e){console.error(e);playSongInPlayer(songId);}
+// ── Filter ────────────────────────────────────────────────────────────────────
+function filterCat(mood,btn){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const f=mood==='all'?allSongs:allSongs.filter(s=>s.mood===mood);
+  renderFeatured(f);renderSongsList(f);
+}
+
+// ── Open song detail ──────────────────────────────────────────────────────────
+function openSongDetail(idx){
+  if(idx<0||idx>=allSongs.length)return;
+  const song=allSongs[idx];currentIdx=idx;currentSong=song;
+  const cfg=MOOD_CFG[song.mood]||MOOD_CFG.happy;
+  const dp=document.getElementById('page-song-detail');dp.classList.add('open');
+
+  // Cover art
+  const da=document.getElementById('det-art');
+  if(song.cover_url){
+    da.innerHTML=`<img src="${song.cover_url}" alt="${song.title}" style="width:100%;height:100%;object-fit:cover;border-radius:20px;"/>`;
+    da.style.background='transparent';
+  } else {
+    da.innerHTML=cfg.emoji;da.style.background=cfg.bg;
+  }
+
+  document.getElementById('det-title').textContent=song.title;
+  document.getElementById('det-artist').textContent=song.artist;
+
+  // Mood badge
+  const mb=document.getElementById('det-mood-badge');
+  mb.textContent=cfg.emoji+' '+song.mood;
+  mb.style.background=cfg.light;mb.style.color=cfg.color;mb.style.border='1px solid '+cfg.color+'44';
+
+  // Like state
+  const liked=likes[song.id]||false;
+  document.getElementById('det-like-btn').textContent=liked?'❤️':'🤍';
+  document.getElementById('det-heart-icon').textContent=liked?'❤️':'🤍';
+  document.getElementById('det-like-count').textContent=liked?'1':'0';
+
+  // Comments
+  const songComments=comments[song.id]||[];
+  document.getElementById('det-comment-count').textContent=songComments.length;
+
+  // Video tab visibility
+  const vt=document.getElementById('det-video-tab');
+  vt.style.display=(song.has_video||song.video_url)?'block':'none';
+
+  // Recs
+  loadRecsForDetail(song);
+
+  // Start playing
+  playSongInPlayer(idx);
+}
+
+function closeSongDetail(){
+  document.getElementById('page-song-detail').classList.remove('open');
+}
+
+function showDetailTab(tab){
+  if(tab==='video') openVideoModal();
+}
+
+async function loadRecsForDetail(song){
+  try{
+    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({song_id:song.id,session_id:SESSION_ID})});
+    const data=await res.json();
+    const recs=data.recommendations||[];
+    const mood=data.mood||song.mood;
+    const cfg=MOOD_CFG[mood]||MOOD_CFG.happy;
+
+    // Show mood banner on discover page
+    document.getElementById('mood-banner').style.display='block';
+    const bi=document.getElementById('mood-banner-inner');
+    bi.style.background=cfg.light;bi.style.borderColor=cfg.color+'44';
+    document.getElementById('mb-emoji').textContent=cfg.emoji;
+    document.getElementById('mb-label').textContent=mood.charAt(0).toUpperCase()+mood.slice(1);
+    document.getElementById('mb-label').style.color=cfg.color;
+    document.getElementById('mb-sub').textContent='Confidence: '+Math.round((data.confidence||0.8)*100)+'%';
+    const mbw=document.getElementById('mb-wave');mbw.innerHTML='';
+    for(let i=0;i<8;i++){const b=document.createElement('div');b.className='wbar';b.style.animationDelay=(i*0.07)+'s';b.style.background=`linear-gradient(to top,${cfg.color},#fff)`;mbw.appendChild(b);}
+
+    if(recs.length){
+      const rl=document.getElementById('det-recs-list');rl.innerHTML='';
+      recs.slice(0,5).forEach(r=>{
+        const rc=MOOD_CFG[r.mood]||MOOD_CFG.happy;
+        const d=document.createElement('div');d.className='song-row';
+        d.onclick=()=>openSongDetail(allSongs.findIndex(s=>s.id===r.id));
+        const imgHtml=r.cover_url?`<img src="${r.cover_url}" alt="${r.title}"/>`:`<span style="font-size:18px;">${rc.emoji}</span>`;
+        d.innerHTML=`
+          <div class="sart" style="background:${rc.bg};">${imgHtml}</div>
+          <div class="sinfo"><p>${r.title}</p><span>${r.artist}</span></div>`;
+        rl.appendChild(d);
+      });
+      document.getElementById('det-recs-wrap').style.display='block';
+      // Also show on discover
+      const rg=document.getElementById('recs-list');rg.innerHTML='';
+      recs.forEach(r=>{
+        const rc=MOOD_CFG[r.mood]||MOOD_CFG.happy;
+        const d=document.createElement('div');d.className='song-row';
+        d.onclick=()=>openSongDetail(allSongs.findIndex(s=>s.id===r.id));
+        const imgHtml=r.cover_url?`<img src="${r.cover_url}" alt="${r.title}"/>`:`<span style="font-size:18px;">${rc.emoji}</span>`;
+        d.innerHTML=`<div class="sart" style="background:${rc.bg};">${imgHtml}</div><div class="sinfo"><p>${r.title}</p><span>${r.artist}</span></div>`;
+        rg.appendChild(d);
+      });
+      document.getElementById('recs-wrap').style.display='block';
+    }
+  }catch(e){}
 }
 
 // ── Mini player ───────────────────────────────────────────────────────────────
-function playSongInPlayer(songId){
-  const idx=allSongs.findIndex(s=>s.id===songId);if(idx===-1)return;
+function playSongInPlayer(idx){
+  if(idx<0||idx>=allSongs.length)return;
   currentIdx=idx;currentSong=allSongs[idx];
-  const s=currentSong,cfg=MOOD_CFG[s.mood]||{emoji:'🎵',bg:'linear-gradient(135deg,#a855f7,#3b82f6)'};
+  const song=currentSong,cfg=MOOD_CFG[song.mood]||MOOD_CFG.happy;
   elapsed=0;isPlaying=true;
-  document.getElementById('player-bar').classList.add('visible');
-  document.getElementById('pb-art').textContent=cfg.emoji;
-  document.getElementById('pb-art').style.background=cfg.bg;
-  document.getElementById('pb-title').textContent=s.title;
-  document.getElementById('pb-artist').textContent=s.artist;
-  document.getElementById('pb-prog').style.width='0%';
-  document.getElementById('pb-cur').textContent='0:00';
-  document.getElementById('pb-playbtn').textContent='⏸';
 
-  // Show video button if available
+  document.getElementById('mini-player').classList.add('visible');
+
+  // Art
+  const pba=document.getElementById('pb-art');
+  if(song.cover_url){pba.innerHTML=`<img src="${song.cover_url}" alt="${song.title}"/>`;pba.style.background='transparent';}
+  else{pba.innerHTML=cfg.emoji;pba.style.background=cfg.bg;}
+
+  document.getElementById('pb-title').textContent=song.title;
+  document.getElementById('pb-artist').textContent=song.artist;
+
+  // Video btn
   const vb=document.getElementById('pb-video-btn');
-  vb.style.display=s.has_video?'inline-flex':'none';
+  vb.style.display=(song.has_video||song.video_url)?'block':'none';
 
-  const audioUrl=s.audio_url||(s.has_audio&&s.audio_filename?'/uploads/audio/'+s.audio_filename:'');
+  // Update detail page if open
+  document.getElementById('det-playbtn').textContent='⏸';
+  document.getElementById('pb-playbtn').innerHTML='<span style="font-size:16px;">⏸</span>';
+  if(document.getElementById('det-title').textContent===song.title){
+    document.getElementById('det-playbtn').textContent='⏸';
+  }
+
+  // Highlight in list
+  document.querySelectorAll('.song-row').forEach(r=>r.classList.remove('playing'));
+  const sr=document.getElementById('sr-'+song.id);if(sr)sr.classList.add('playing');
+
+  // History
+  history.unshift({...song,playedAt:new Date().toLocaleTimeString()});
+  if(history.length>30)history.pop();
+
+  // Audio
+  const audioUrl=song.audio_url||(song.has_audio&&song.audio_filename?'/uploads/audio/'+song.audio_filename:'');
   if(audioUrl){
     if(audioEl){audioEl.pause();audioEl.src='';}
     audioEl=new Audio(audioUrl);
-    audioEl.volume=parseInt(document.getElementById('vol-sl').value)/100;
-    audioEl.play().catch(()=>{});
+    audioEl.volume=0.8;audioEl.play().catch(()=>{});
     audioEl.ontimeupdate=()=>{
       if(!audioEl.duration)return;
-      const pct=Math.round(audioEl.currentTime/audioEl.duration*100);
-      document.getElementById('pb-prog').style.width=pct+'%';
-      document.getElementById('pb-cur').textContent=fmtTime(Math.round(audioEl.currentTime));
-      document.getElementById('pb-dur').textContent=fmtTime(Math.round(audioEl.duration));
+      const pct=audioEl.currentTime/audioEl.duration*100;
+      document.getElementById('pb-prog-fill').style.width=pct+'%';
+      document.getElementById('det-prog-fill').style.width=pct+'%';
+      document.getElementById('det-cur').textContent=fmtTime(Math.round(audioEl.currentTime));
+      document.getElementById('det-dur').textContent=fmtTime(Math.round(audioEl.duration));
     };
     audioEl.onended=()=>nextSong();
   } else {
     if(audioEl){audioEl.pause();audioEl.src='';}
-    const dur=180+Math.floor(Math.random()*120);
-    document.getElementById('pb-dur').textContent=fmtTime(dur);
+    const dur=200+Math.floor(Math.random()*120);
+    document.getElementById('det-dur').textContent=fmtTime(dur);
     clearInterval(timerRef);
     timerRef=setInterval(()=>{
       if(!isPlaying)return;elapsed++;
       if(elapsed>=dur){clearInterval(timerRef);nextSong();return;}
-      document.getElementById('pb-prog').style.width=Math.round(elapsed/dur*100)+'%';
-      document.getElementById('pb-cur').textContent=fmtTime(elapsed);
+      const pct=elapsed/dur*100;
+      document.getElementById('pb-prog-fill').style.width=pct+'%';
+      document.getElementById('det-prog-fill').style.width=pct+'%';
+      document.getElementById('det-cur').textContent=fmtTime(elapsed);
     },1000);
   }
 }
 
 function togglePlay(){
   isPlaying=!isPlaying;
-  document.getElementById('pb-playbtn').textContent=isPlaying?'⏸':'▶';
+  const icon=isPlaying?'⏸':'▶';
+  document.getElementById('det-playbtn').textContent=icon;
+  document.getElementById('pb-playbtn').innerHTML=`<span style="font-size:16px;">${icon}</span>`;
   if(audioEl){isPlaying?audioEl.play():audioEl.pause();}
 }
-function nextSong(){if(allSongs.length)playSongInPlayer(allSongs[(currentIdx+1)%allSongs.length].id);}
-function prevSong(){if(allSongs.length)playSongInPlayer(allSongs[(currentIdx-1+allSongs.length)%allSongs.length].id);}
-function seekTo(e,wrap){
+function nextSong(){if(allSongs.length){const ni=(currentIdx+1)%allSongs.length;openSongDetail(ni);}}
+function prevSong(){if(allSongs.length){const ni=(currentIdx-1+allSongs.length)%allSongs.length;openSongDetail(ni);}}
+function detSeekTo(e,wrap){
   const pct=e.offsetX/wrap.offsetWidth;
   if(audioEl&&audioEl.duration)audioEl.currentTime=pct*audioEl.duration;
   else elapsed=Math.round(pct*200);
-  document.getElementById('pb-prog').style.width=Math.round(pct*100)+'%';
+  document.getElementById('det-prog-fill').style.width=(pct*100)+'%';
 }
-function setVol(v){if(audioEl)audioEl.volume=parseInt(v)/100;}
 function fmtTime(s){return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60;}
+
+// ── Like ──────────────────────────────────────────────────────────────────────
+function toggleLike(){
+  if(!currentSong)return;
+  likes[currentSong.id]=!likes[currentSong.id];
+  const liked=likes[currentSong.id];
+  document.getElementById('det-like-btn').textContent=liked?'❤️':'🤍';
+  document.getElementById('det-heart-icon').textContent=liked?'❤️':'🤍';
+  document.getElementById('det-like-count').textContent=liked?'1':'0';
+  const btn=document.getElementById('det-like-count-btn');
+  btn.classList.add('liked');setTimeout(()=>btn.classList.remove('liked'),300);
+}
+
+// ── Reel like ────────────────────────────────────────────────────────────────
+function toggleReelLike(){
+  if(currentIdx<0)return;
+  const s=allSongs[currentIdx];
+  likes[s.id]=!likes[s.id];
+  document.getElementById('reel-like-icon').textContent=likes[s.id]?'❤️':'🤍';
+  document.getElementById('reel-like-count').textContent=likes[s.id]?'1':'0';
+}
+
+// ── Share ────────────────────────────────────────────────────────────────────
+function shareCurrentSong(){
+  if(!currentSong)return;
+  if(navigator.share){navigator.share({title:currentSong.title,text:'Listen to '+currentSong.title+' by '+currentSong.artist+' on MoodWave',url:window.location.href});}
+  else{navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'));}
+}
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+function openComments(){
+  const panel=document.getElementById('comments-panel');
+  panel.style.transform='translateY(0)';
+  if(currentSong){
+    const songComments=comments[currentSong.id]||[];
+    document.getElementById('comment-total').textContent=songComments.length;
+    const list=document.getElementById('comments-list');list.innerHTML='';
+    songComments.forEach(c=>{
+      const d=document.createElement('div');
+      d.style.cssText='display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);';
+      d.innerHTML=`<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${c.user.charAt(0)}</div><div><p style="font-size:13px;">${c.text}</p><p style="font-size:10px;color:rgba(255,255,255,0.3);">${c.time}</p></div>`;
+      list.appendChild(d);
+    });
+    if(!songComments.length)list.innerHTML='<p style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;font-size:13px;">No comments yet. Be first!</p>';
+  }
+}
+function closeComments(){document.getElementById('comments-panel').style.transform='translateY(100%)';}
+function postComment(){
+  const input=document.getElementById('comment-input');const text=input.value.trim();
+  if(!text||!currentSong)return;
+  if(!comments[currentSong.id])comments[currentSong.id]=[];
+  comments[currentSong.id].push({text,user:'You',time:new Date().toLocaleTimeString()});
+  input.value='';openComments();
+  document.getElementById('det-comment-count').textContent=comments[currentSong.id].length;
+}
 
 // ── Video modal ───────────────────────────────────────────────────────────────
 function openVideoModal(){
   if(!currentSong)return;
-  const ov=document.getElementById('video-overlay'),vp=document.getElementById('video-player'),
-        vt=document.getElementById('video-title'),vu=document.getElementById('video-unavail');
-  vt.textContent=currentSong.title+' — '+currentSong.artist;
+  const modal=document.getElementById('video-modal');modal.classList.add('open');
+  const vp=document.getElementById('modal-video'),nv=document.getElementById('modal-no-video');
+  document.getElementById('modal-video-title').textContent=currentSong.title+' — '+currentSong.artist;
   const videoUrl=currentSong.video_url||(currentSong.has_video&&currentSong.video_filename?'/uploads/video/'+currentSong.video_filename:'');
-  if(videoUrl){vp.style.display='block';vu.style.display='none';vp.src=videoUrl;vp.play().catch(()=>{});}
-  else{vp.style.display='none';vu.style.display='block';vp.src='';}
-  ov.classList.add('open');
+  if(videoUrl){vp.style.display='block';nv.style.display='none';vp.src=videoUrl;vp.play().catch(()=>{});}
+  else{vp.style.display='none';nv.style.display='flex';nv.style.flexDirection='column';nv.style.alignItems='center';nv.style.padding='40px';}
 }
-function closeVideoBtn(){
-  const vp=document.getElementById('video-player');vp.pause();vp.src='';
-  document.getElementById('video-overlay').classList.remove('open');
+function closeVideoModal(){
+  document.getElementById('video-modal').classList.remove('open');
+  document.getElementById('modal-video').pause();document.getElementById('modal-video').src='';
 }
-function closeVideo(e){if(e.target===document.getElementById('video-overlay'))closeVideoBtn();}
+
+// ── Reels page ────────────────────────────────────────────────────────────────
+function openReelsPage(){
+  document.getElementById('page-reels').classList.add('open');
+  loadReel(currentReelIdx);
+}
+function showReelsPage(){currentReelIdx=0;openReelsPage();}
+function closeReels(){
+  document.getElementById('page-reels').classList.remove('open');
+  const rv=document.getElementById('reel-video');rv.pause();rv.src='';
+}
+function showReelForSong(){
+  if(!currentSong)return;
+  currentReelIdx=currentIdx;
+  openReelsPage();
+}
+
+function loadReel(idx){
+  if(idx<0||idx>=allSongs.length)return;
+  const song=allSongs[idx];currentIdx=idx;
+  const cfg=MOOD_CFG[song.mood]||MOOD_CFG.happy;
+  document.getElementById('reel-title').textContent=song.title;
+  document.getElementById('reel-artist').textContent=song.artist;
+  document.getElementById('reel-mood').textContent=cfg.emoji+' '+song.mood;
+  document.getElementById('reel-bar-title').textContent=song.title;
+  document.getElementById('reel-bar-artist').textContent=song.artist;
+  document.getElementById('reel-like-icon').textContent=likes[song.id]?'❤️':'🤍';
+  document.getElementById('reel-like-count').textContent=likes[song.id]?'1':'0';
+  document.getElementById('reel-comment-count').textContent=(comments[song.id]||[]).length;
+
+  const rf=document.getElementById('reel-fallback');
+  const rv=document.getElementById('reel-video');
+  const rba=document.getElementById('reel-bar-art');
+
+  // Cover in reel
+  if(song.cover_url){
+    rf.innerHTML=`<img src="${song.cover_url}" style="width:100%;height:100%;object-fit:cover;"/>`;
+  } else {
+    rf.innerHTML=`<span style="font-size:80px;">${cfg.emoji}</span>`;
+    rf.style.background=cfg.bg;
+  }
+
+  rba.innerHTML=song.cover_url?`<img src="${song.cover_url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;"/>`:`<span style="font-size:18px;">${cfg.emoji}</span>`;
+
+  const videoUrl=song.video_url||(song.has_video&&song.video_filename?'/uploads/video/'+song.video_filename:'');
+  if(videoUrl){
+    rv.style.display='block';rf.style.display='none';
+    rv.src=videoUrl;rv.play().catch(()=>{});
+    rv.ontimeupdate=()=>{
+      if(!rv.duration)return;
+      document.getElementById('reel-prog-fill').style.width=(rv.currentTime/rv.duration*100)+'%';
+    };
+  } else {
+    rv.style.display='none';rf.style.display='flex';rv.pause();rv.src='';
+    // Play audio
+    playSongInPlayer(idx);
+  }
+}
+function nextReel(){currentReelIdx=(currentReelIdx+1)%allSongs.length;loadReel(currentReelIdx);}
+function prevReel(){currentReelIdx=(currentReelIdx-1+allSongs.length)%allSongs.length;loadReel(currentReelIdx);}
+function playFromReel(){closeSongDetail();openSongDetail(currentIdx);}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+function doSearch(q){
+  const sr=document.getElementById('search-results'),bg=document.getElementById('browse-genres');
+  if(!q.trim()){sr.style.display='none';bg.style.display='block';return;}
+  bg.style.display='none';sr.style.display='block';
+  const results=allSongs.filter(s=>
+    s.title.toLowerCase().includes(q.toLowerCase())||
+    s.artist.toLowerCase().includes(q.toLowerCase())||
+    (s.genre||'').toLowerCase().includes(q.toLowerCase())||
+    s.mood.toLowerCase().includes(q.toLowerCase())
+  );
+  document.getElementById('result-count').textContent=results.length+' results';
+  const list=document.getElementById('results-list');list.innerHTML='';
+  if(!results.length){list.innerHTML='<p style="text-align:center;color:rgba(255,255,255,0.3);padding:30px;font-size:13px;">No results for "'+q+'"</p>';return;}
+  results.forEach(song=>{
+    const cfg=MOOD_CFG[song.mood]||MOOD_CFG.happy;
+    const d=document.createElement('div');d.className='song-row';
+    d.onclick=()=>{openSongDetail(allSongs.indexOf(song));showPage('discover');};
+    const imgHtml=song.cover_url?`<img src="${song.cover_url}" alt="${song.title}"/>`:`<span style="font-size:22px;">${cfg.emoji}</span>`;
+    d.innerHTML=`
+      <div class="sart" style="background:${cfg.bg};">${imgHtml}</div>
+      <div class="sinfo"><p>${song.title}</p><span>${song.artist} · ${song.mood}</span></div>`;
+    list.appendChild(d);
+  });
+}
+function searchByGenre(genre){
+  document.getElementById('search-input').value=genre;doSearch(genre);
+}
+function filterAndGo(mood){
+  showPage('discover');filterCat(mood,null);
+  document.querySelectorAll('.chip').forEach(c=>{c.classList.remove('on');if(c.textContent.toLowerCase().includes(mood))c.classList.add('on');});
+}
 
 // ── History ───────────────────────────────────────────────────────────────────
-function renderHistory(){
-  const l=document.getElementById('history-list'),e=document.getElementById('history-empty');
-  l.innerHTML='';
-  if(!history.length){l.style.display='none';e.style.display='block';return;}
-  l.style.display='block';e.style.display='none';
-  history.forEach(s=>{
-    const cfg=MOOD_CFG[s.mood]||{emoji:'🎵',bg:'linear-gradient(135deg,#a855f7,#3b82f6)',color:'#a855f7'};
-    const hasAudio=!!s.has_audio||!!s.audio_url,hasVideo=!!s.has_video;
-    const d=document.createElement('div');d.className='hist-item';d.onclick=()=>analyzeSong(s.id);
-    d.innerHTML=`
-      <div style="width:38px;height:38px;border-radius:10px;background:${cfg.bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${cfg.emoji}</div>
-      <div style="flex:1;min-width:0;">
-        <p style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.title}</p>
-        <p style="color:rgba(255,255,255,0.35);font-size:11px;">${s.artist}</p>
-      </div>
-      <span class="mpill mp-${s.mood}">${s.mood}</span>
-      ${hasAudio?'<span class="mbadge audio-yes">🎵</span>':'<span class="mbadge audio-no">🎵 N/A</span>'}
-      ${hasVideo?'<span class="mbadge video-yes">🎬</span>':'<span class="mbadge video-no">🎬 N/A</span>'}
-      <span style="font-size:11px;color:rgba(255,255,255,0.2);">${s.playedAt||''}</span>`;
-    l.appendChild(d);
-  });
-}
-
-// ── Library list ──────────────────────────────────────────────────────────────
-function renderLibraryList(){
-  const el=document.getElementById('library-list');
-  document.getElementById('library-count').textContent=allSongs.length+' songs';
+function renderHistoryList(){
+  const el=document.getElementById('hist-list'),em=document.getElementById('hist-empty');
   el.innerHTML='';
-  if(!allSongs.length){el.innerHTML='<p style="color:rgba(255,255,255,0.3);font-size:13px;text-align:center;padding:20px;">No songs yet.</p>';return;}
-  allSongs.forEach(s=>{
-    const cfg=MOOD_CFG[s.mood]||{emoji:'🎵',bg:'linear-gradient(135deg,#a855f7,#3b82f6)'};
-    const hasAudio=!!s.has_audio||!!s.audio_url,hasVideo=!!s.has_video;
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);margin-bottom:7px;';
-    row.innerHTML=`
-      <div style="width:32px;height:32px;border-radius:8px;background:${cfg.bg};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">${cfg.emoji}</div>
-      <div style="flex:1;min-width:0;">
-        <p style="font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.title}</p>
-        <p style="color:rgba(255,255,255,0.3);font-size:11px;">${s.artist} · ${s.genre||''}</p>
-      </div>
-      <span class="mpill mp-${s.mood}">${s.mood}</span>
-      ${hasAudio?'<span class="mbadge audio-yes">🎵 Audio</span>':'<span class="mbadge audio-no">🎵 No audio</span>'}
-      ${hasVideo?'<span class="mbadge video-yes">🎬 Video</span>':'<span class="mbadge video-no">🎬 No video</span>'}
-      <button onclick="deleteSong(${s.id},this)" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.25);color:#f87171;border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;flex-shrink:0;">Delete</button>`;
-    el.appendChild(row);
+  if(!history.length){el.style.display='none';em.style.display='block';return;}
+  el.style.display='block';em.style.display='none';
+  history.forEach(s=>{
+    const cfg=MOOD_CFG[s.mood]||MOOD_CFG.happy;
+    const d=document.createElement('div');d.className='hist-item';
+    d.onclick=()=>openSongDetail(allSongs.findIndex(x=>x.id===s.id));
+    const imgHtml=s.cover_url?`<img src="${s.cover_url}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;"/>`:`<span style="font-size:20px;">${cfg.emoji}</span>`;
+    d.innerHTML=`
+      <div style="width:44px;height:44px;border-radius:10px;background:${cfg.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${imgHtml}</div>
+      <div style="flex:1;min-width:0;"><p style="font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.title}</p><p style="color:rgba(255,255,255,0.35);font-size:11px;">${s.artist}</p></div>
+      <span style="font-size:10px;color:rgba(255,255,255,0.25);">${s.playedAt||''}</span>`;
+    el.appendChild(d);
   });
 }
 
-// ── File drag/drop helpers ────────────────────────────────────────────────────
-function dzOver(e,zoneId){e.preventDefault();document.getElementById(zoneId).classList.add('drag');}
-function dzLeave(zoneId){document.getElementById(zoneId).classList.remove('drag');}
-function dzDrop(e,inputId,zoneId){
-  e.preventDefault();dzLeave(zoneId);
-  const file=e.dataTransfer.files[0];
-  if(!file)return;
-  const inp=document.getElementById(inputId);
-  const dt=new DataTransfer();dt.items.add(file);inp.files=dt.files;
-  inp.dispatchEvent(new Event('change'));
+// ── Upload ────────────────────────────────────────────────────────────────────
+function dzOver(e,z){e.preventDefault();document.getElementById(z).classList.add('drag');}
+function dzLeave(z){document.getElementById(z).classList.remove('drag');}
+function dzDrop(e,inp,z){
+  e.preventDefault();dzLeave(z);const f=e.dataTransfer.files[0];if(!f)return;
+  const el=document.getElementById(inp);const dt=new DataTransfer();dt.items.add(f);el.files=dt.files;el.dispatchEvent(new Event('change'));
 }
+
+function photoChosen(inp){
+  if(!inp.files[0])return;const f=inp.files[0];
+  document.getElementById('photo-drop-text').textContent='✓ '+f.name;
+  const preview=document.getElementById('photo-preview');
+  const reader=new FileReader();
+  reader.onload=e=>{preview.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"/>`;};
+  reader.readAsDataURL(f);
+}
+
 function fileChosen(inp,zoneId,textId,infoId,nameId,sizeId){
-  if(!inp.files[0])return;
-  const f=inp.files[0];
+  if(!inp.files[0])return;const f=inp.files[0];
   document.getElementById(textId).textContent='✓ '+f.name;
   document.getElementById(nameId).textContent=f.name;
   document.getElementById(sizeId).textContent=(f.size/1024/1024).toFixed(2)+' MB';
   document.getElementById(infoId).style.display='block';
   document.getElementById(zoneId).classList.remove('drag');
-  // Auto-fill title
-  const t=document.getElementById('new-title');
-  if(!t.value) t.value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ');
+  if(inp.id==='audio-input'&&!document.getElementById('new-title').value){
+    document.getElementById('new-title').value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]/g,' ');
+  }
 }
 
-// ── Save song (multipart form upload) ─────────────────────────────────────────
 async function saveSong(){
   const title=document.getElementById('new-title').value.trim();
   const artist=document.getElementById('new-artist').value.trim();
   const mood=document.getElementById('new-mood').value;
-  if(!title||!artist||!mood){showToast('Please fill in Title, Artist and Mood.','err');return;}
-
-  const btn=document.getElementById('save-btn');
-  btn.textContent='Saving…';btn.disabled=true;
-
+  if(!title||!artist||!mood){showToast('Please fill Title, Artist and Mood.','err');return;}
+  const btn=document.getElementById('save-btn');btn.textContent='Saving…';btn.disabled=true;
   const fd=new FormData();
   fd.append('title',title);fd.append('artist',artist);fd.append('mood',mood);
   fd.append('genre',document.getElementById('new-genre').value.trim()||'Unknown');
   fd.append('tempo',document.getElementById('sl-tempo').value);
   fd.append('energy',parseFloat(document.getElementById('sl-energy').value)/100);
-  fd.append('valence',parseFloat(document.getElementById('sl-valence').value)/100);
-  fd.append('danceability',parseFloat(document.getElementById('sl-dance').value)/100);
+  fd.append('valence',0.5);fd.append('danceability',0.5);
   fd.append('audio_url',document.getElementById('new-url').value.trim());
-
   const af=document.getElementById('audio-input').files[0];
   const vf=document.getElementById('video-input').files[0];
+  const pf=document.getElementById('photo-input').files[0];
   if(af)fd.append('audio_file',af);
   if(vf)fd.append('video_file',vf);
-
+  if(pf)fd.append('cover_photo',pf);
   try{
     const res=await fetch('/api/songs/upload',{method:'POST',body:fd});
     const data=await res.json();
-    if(data.ok){
-      let msg='✓ Song saved!';
-      if(data.has_audio)msg+=' Audio uploaded.';
-      if(data.has_video)msg+=' Video uploaded.';
-      showToast(msg,'ok');clearForm();await loadSongs();renderLibraryList();
-    }else{showToast(data.error||'Failed to save.','err');}
-  }catch(e){showToast('Server error: '+e.message,'err');}
+    if(data.ok){showToast('✓ Song saved!','ok');clearForm();await loadSongs();}
+    else showToast(data.error||'Failed.','err');
+  }catch(e){showToast('Server error.','err');}
   btn.textContent='Save song';btn.disabled=false;
 }
 
 async function deleteSong(id,btn){
-  if(!confirm('Delete this song and its files?'))return;
-  btn.textContent='…';btn.disabled=true;
-  try{
-    const r=await fetch('/api/songs/'+id,{method:'DELETE'});
-    const d=await r.json();
-    if(d.ok){await loadSongs();renderLibraryList();}
-    else{btn.textContent='Delete';btn.disabled=false;}
-  }catch(e){btn.textContent='Delete';btn.disabled=false;}
+  if(!confirm('Delete this song?'))return;btn.textContent='…';btn.disabled=true;
+  try{const r=await fetch('/api/songs/'+id,{method:'DELETE'});const d=await r.json();if(d.ok){await loadSongs();updateLibList();}else{btn.textContent='Delete';btn.disabled=false;}}
+  catch(e){btn.textContent='Delete';btn.disabled=false;}
 }
 
 function clearForm(){
@@ -723,38 +1446,43 @@ function clearForm(){
   document.getElementById('new-mood').value='';
   document.getElementById('sl-tempo').value=120;document.getElementById('sv-tempo').textContent='120';
   document.getElementById('sl-energy').value=50;document.getElementById('sv-energy').textContent='0.50';
-  document.getElementById('sl-valence').value=50;document.getElementById('sv-valence').textContent='0.50';
-  document.getElementById('sl-dance').value=50;document.getElementById('sv-dance').textContent='0.50';
-  ['audio-input','video-input'].forEach(id=>{document.getElementById(id).value='';});
-  ['audio-info','video-info'].forEach(id=>{document.getElementById(id).style.display='none';});
-  document.getElementById('audio-drop-text').textContent='Click or drag audio file here';
-  document.getElementById('video-drop-text').textContent='Click or drag video file here';
+  ['audio-input','video-input','photo-input'].forEach(id=>document.getElementById(id).value='');
+  ['audio-info','video-info'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('audio-drop-text').textContent='Click or drag audio file';
+  document.getElementById('video-drop-text').textContent='Click or drag video file';
+  document.getElementById('photo-drop-text').textContent='Click to add cover photo';
+  document.getElementById('photo-preview').innerHTML='🖼';
 }
 
 function showToast(msg,type){
   const t=document.getElementById('save-toast');t.textContent=msg;t.className='toast '+type;t.style.display='block';
-  setTimeout(()=>t.style.display='none',4000);
+  setTimeout(()=>t.style.display='none',3500);
 }
 
-// ── User info ──────────────────────────────────────────────────────────────────
-async function loadMe(){
-  try{
-    const r=await fetch('/api/me');const d=await r.json();
-    if(d.logged_in){
-      const n=d.name||'User';
-      document.getElementById('sidebar-name').textContent=n;
-      document.getElementById('sidebar-email').textContent=d.email||'';
-      document.getElementById('sidebar-avatar').textContent=n.charAt(0).toUpperCase();
-      if(d.avatar)document.getElementById('sidebar-avatar').innerHTML=`<img src="${d.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>`;
-    }
-  }catch(e){}
+function updateLibList(){
+  const el=document.getElementById('lib-list');
+  document.getElementById('lib-count').textContent=allSongs.length+' songs';
+  el.innerHTML='';
+  allSongs.forEach(s=>{
+    const cfg=MOOD_CFG[s.mood]||MOOD_CFG.happy;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);';
+    const imgHtml=s.cover_url?`<img src="${s.cover_url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;"/>`:`<span style="font-size:14px;">${cfg.emoji}</span>`;
+    row.innerHTML=`
+      <div style="width:32px;height:32px;border-radius:8px;background:${cfg.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${imgHtml}</div>
+      <div style="flex:1;min-width:0;"><p style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.title}</p><p style="font-size:10px;color:rgba(255,255,255,0.35);">${s.artist}</p></div>
+      <button onclick="deleteSong(${s.id},this)" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.25);color:#f87171;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;flex-shrink:0;">Del</button>`;
+    el.appendChild(row);
+  });
 }
 
+// ── Logout ────────────────────────────────────────────────────────────────────
 async function doLogout(){
   try{const r=await fetch('/api/logout',{method:'POST'});const d=await r.json();window.location.href=d.redirect||'/home';}
   catch(e){window.location.href='/home';}
 }
 
+// ── Init ──────────────────────────────────────────────────────────────────────
 loadMe();loadSongs();
 </script>
 </body>
