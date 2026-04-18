@@ -55,3 +55,56 @@ VALUES
   (10,'Uptown Funk','Bruno Mars','happy','Funk',115,0.85,0.90,0.90,0,0),
   (11,'Perfect','Ed Sheeran','romantic','Pop',95,0.45,0.75,0.56,0,0),
   (12,'A Thousand Years','Christina Perri','romantic','Pop',89,0.37,0.62,0.41,0,0);
+
+  USE music_mood_db;
+
+-- Add cover_url and video_url to songs table
+ALTER TABLE songs ADD COLUMN IF NOT EXISTS cover_url VARCHAR(500) DEFAULT '';
+ALTER TABLE songs ADD COLUMN IF NOT EXISTS video_url VARCHAR(500) DEFAULT '';
+
+-- Separate reels table with hashtags and description
+CREATE TABLE IF NOT EXISTS reels (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  song_id      INT,
+  title        VARCHAR(200) NOT NULL,
+  artist       VARCHAR(200) NOT NULL,
+  description  TEXT DEFAULT '',
+  hashtags     VARCHAR(500) DEFAULT '',
+  video_url    VARCHAR(500) DEFAULT '',
+  cover_url    VARCHAR(500) DEFAULT '',
+  mood         VARCHAR(50)  DEFAULT 'happy',
+  likes_count  INT          DEFAULT 0,
+  views_count  INT          DEFAULT 0,
+  created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE SET NULL
+);
+
+-- Reel likes table
+CREATE TABLE IF NOT EXISTS reel_likes (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  reel_id    INT NOT NULL,
+  session_id VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_like (reel_id, session_id),
+  FOREIGN KEY (reel_id) REFERENCES reels(id) ON DELETE CASCADE
+);
+
+-- Reel comments table
+CREATE TABLE IF NOT EXISTS reel_comments (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  reel_id    INT NOT NULL,
+  username   VARCHAR(100) DEFAULT 'User',
+  comment    TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (reel_id) REFERENCES reels(id) ON DELETE CASCADE
+);
+
+-- Stats table for tracking plays per song per day
+CREATE TABLE IF NOT EXISTS song_stats (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  song_id    INT NOT NULL,
+  session_id VARCHAR(100),
+  mood       VARCHAR(50),
+  played_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE
+);
